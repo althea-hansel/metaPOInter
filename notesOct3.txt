@@ -1,0 +1,9 @@
+want metaPOInter to interface with POInter to calculate RMSE and dRMSE for each molecule
+
+Questions for MVV:
+
+leastsq_ff_fit vs RMSE?
+
+making FitFFParameters object without performing fit? Want to avoid unneccesary computation time
+
+what to do with drude charges? have been ignoring
