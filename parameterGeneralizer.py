@@ -731,7 +731,6 @@ def make_bounds_list(parameterList):
 				bounds_list.append((-1e0,1e0))
 				i += 1
 
-	print bounds_list
 	return bounds_list
 
 def metaPOInter(parameterList):
