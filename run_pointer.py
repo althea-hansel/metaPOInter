@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from fit_ff_parameters import FitFFParameters as Fit
+from pointer import FitFFParameters as Fit
 
 settings = {}
 settings['mon1'] = 'ethane'

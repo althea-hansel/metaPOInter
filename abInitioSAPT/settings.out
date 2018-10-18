@@ -1,6 +1,6 @@
 Importing configuration settings from the following files:
 	C:\Users\Theodore\Apps\pointer\methods\default.pyc
-	C:\Users\Theodore\Apps\pointer\methods\mastiff.pyc
+	C:\Users\Theodore\Apps\pointer\methods\default.pyc
 
 Current Program Settings:
 aij_combination_rule                     geometric
@@ -27,10 +27,10 @@ mon2                                     ethane
 multipole_file1                          input/ethane_ISA_L2.mom
 multipole_file2                          input/ethane_ISA_L2.mom
 multipoles_suffix                        _ISA_L2.mom
-ofile_prefix                             output/fit_exp_
-ofile_suffix                             _unconstrained
-output_file                              output/fit_exp_coeffs_unconstrained.out
-output_settings_file                     output/fit_exp_settings_unconstrained.out
+ofile_prefix                             
+ofile_suffix                             
+output_file                              coeffs.out
+output_settings_file                     settings.out
 rigid_monomers                           True
 scale_weighting_temperature              5.0
 separate_induction_exponents             False

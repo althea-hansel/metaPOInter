@@ -1,5 +1,12 @@
 {
     "H": {
+        "params_order": [
+            "Exchange", 
+            "Electrostatics", 
+            "Induction", 
+            "Dhf", 
+            "Dispersion"
+        ], 
         "A": [
             0.620415621274386, 
             0.2908701508531259, 
@@ -14,13 +21,22 @@
             [], 
             []
         ], 
+        "B": 2.21806524, 
         "C": [
             1.4604324359586103, 
             10.009121115262818, 
             50.825350957961916, 
             157.07729944202632
         ], 
-        "B": 2.21806524, 
+        "drude_charge": -0.587568966478328, 
+        "sph_harm": [], 
+        "comments": [
+            "Parameters for the H atom in the molecule ethane, obtained from fitting the ethane - ethane dimer.", 
+            "Z-axis not defined", 
+            "X-axis not defined"
+        ]
+    }, 
+    "C": {
         "params_order": [
             "Exchange", 
             "Electrostatics", 
@@ -28,13 +44,9 @@
             "Dhf", 
             "Dispersion"
         ], 
-        "sph_harm": [], 
-        "drude_charge": -0.587568966478328
-    }, 
-    "C": {
         "A": [
-            0.6204156213071866, 
-            1.8987201057921919, 
+            1.8987201060057546, 
+            1.3739720564028992, 
             0.024925768305041385, 
             0.08927960795845975, 
             1.0
@@ -46,21 +58,19 @@
             [], 
             []
         ], 
+        "B": 2.00548683, 
         "C": [
             0.1802852489806085, 
             4.765656198258536, 
             112.4865058573694, 
             810.194458139526
         ], 
-        "B": 2.00548683, 
-        "params_order": [
-            "Exchange", 
-            "Electrostatics", 
-            "Induction", 
-            "Dhf", 
-            "Dispersion"
-        ], 
+        "drude_charge": -0.774024183257736, 
         "sph_harm": [], 
-        "drude_charge": -0.774024183257736
+        "comments": [
+            "Parameters for the C atom in the molecule ethane, obtained from fitting the ethane - ethane dimer.", 
+            "Z-axis not defined", 
+            "X-axis not defined"
+        ]
     }
 }

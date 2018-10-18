@@ -10,11 +10,10 @@ import os
 from scipy.optimize import minimize
 import json
 import glob
+import math
 
 # Local modules
-import functional_forms 
-from multipoles import Multipoles
-import fit_ff_parameters as Pointer
+from pointer import fit_ff_parameters as Pointer
 
 # Global variables
 
@@ -637,17 +636,17 @@ def map_params(inputList, fileName):
 		else:
 			atomtypeParams["sph_harm"] = []
 			atomtypeParams["aniso"] = [[],[],[],[],[]]
-		if atomtype == "O(0)":
-			atomtypeParams["drude_charge"] = -sqrt(17.174511/0.1) #TODO: change to actual values
+		if atomtype == "C":
+			atomtypeParams["drude_charge"] = -0.774024183257736 #TODO: change to actual values
 		else:
-			atomtypeParams["drude_charge"] = 0.0 # TODO: change to actual values
+			atomtypeParams["drude_charge"] = -0.587568966478328 # TODO: change to actual values
 		output[atomtype] = atomtypeParams
 
 	#write .constraints file with parameters from list
 	with open(fileName + ".constraints", 'w') as f:
 		json.dump(output, f, indent = 4)
 
-def calc_harmonic_constraint_error(params, k = 1e-2):
+def calc_harmonic_constraint_penalty(params, k = 1e-2):
 	"""
 	calculates harmonic penalty for parameters differing from initial constraints
 
@@ -665,22 +664,75 @@ def calc_harmonic_constraint_error(params, k = 1e-2):
 	--------
 
 	harmonic_error : float, Energy penalty associated with employed harmonic constraints.
+
+	parameter_errors: list, contains floats of errors for each individual parameter
         
     dharmonic_error : list
             Derivatives of the harmonic error with respect to each
             parameter.
     """
 	harmonic_error = 0
+	parameter_errors = []
 	dharmonic_error = []
 	dharmonic_error = [ 0 for _ in params]
 	for i in range(len(params)):
 		b = params[i]
 		b0 = initialValuesList[i]
-		harmonic_error += k*(b - b0)**2
+		param_error = k*(b - b0)**2
+		harmonic_error += param_error
+		parameter_errors.append(param_error)
 		dharmonic_error[i] = 2*k*(b - b0)*b0
 
-	return harmonic_error, dharmonic_error
+	return harmonic_error, dharmonic_error, parameter_errors
 
+def make_bounds_list(parameterList):
+	"""
+	makes list of tuples containing bounds for parameters. Order corresponds with parameter order [Atomtype1 A,B,C,Aniso; Atomtype2 A,B,C,Aniso; ...]
+
+	Parameters: 
+	----------
+
+	None
+
+	Returns:
+	--------
+
+	bounds_list: list of bound tuples
+
+	"""
+	i = 0 #keep track of position in parameterList
+
+	bounds_list = []
+
+	harmonic_penalties = calc_harmonic_constraint_penalty(tuple(parameterList))
+
+	allAtomtypes.sort()
+
+	for atomtype in allAtomtypes:
+		#A params
+		for component in energyTerms:
+			if component != "Dispersion":
+				bounds_list.append((0,1e3))
+				i += 1
+			else:
+				bounds_list.append((0.7,1.3))
+				i += 1
+		#B param
+		bounds_list.append((1e-2,1e2))
+		i += 1
+		#C params
+		for component in dispersionTerms:
+			bounds_list.append((None,None))
+			i += 1
+		#aniso
+		if atomtype in anisoAtomtypes:
+			sphericalHarmonics = atomtypeSphericalHarmonics[atomtype]
+			for sh in sphericalHarmonics:
+				bounds_list.append((-1e0,1e0))
+				i += 1
+
+	print bounds_list
+	return bounds_list
 
 def metaPOInter(parameterList):
 	"""
@@ -733,17 +785,18 @@ def metaPOInter(parameterList):
 		pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
 		#get RMSE and dRMSE, including harmonic penalty
 		pointerOutput = pointerModel.calc_leastsq_ff_fit(parameterTuple)
-		harmonic_errors = calc_harmonic_constraint_error(parameterTuple)
+		#TODO: implement option for harmonic constraints on B params
+		#harmonic_errors = calc_harmonic_constraint_penalty(parameterTuple)
 		totalRMSE += pointerOutput[0]
-		totalRMSE += harmonic_errors[0]
+		#totalRMSE += harmonic_errors[0]
 		if dRMSE == []:
 			dRMSE = pointerOutput[1].tolist()
-			for i in range(len(harmonic_errors[1])):
-				dRMSE[i] += harmonic_errors[1][i]
+			#for i in range(len(harmonic_errors[1])):
+			#	dRMSE[i] += harmonic_errors[1][i]
 		else:
 			for i in range(len(dRMSE)):
 				dRMSE[i] += pointerOutput[1].tolist()[i]
-				dRMSE[i] += harmonic_errors[1][i]
+				#dRMSE[i] += harmonic_errors[1][i]
 
 	minimizeIterCount += 1
 	os.chdir(scriptDir)
@@ -771,9 +824,12 @@ def optimzeGeneralParameters():
 
 	map_params(initialValuesList,"initial_params_test")
 
+	bnds = make_bounds_list(initialValuesList)
+
 	res = minimize(metaPOInter,initialValuesList,method='L-BFGS-B',\
 						jac=True,\
-						options={'disp':True,'gtol':pgtol,'ftol':ftol,'maxiter':maxiter})
+						options={'disp':True,'gtol':pgtol,'ftol':ftol,'maxiter':maxiter},\
+						bounds = bnds)
 	popt = res.x
 	success = res.success
 	message = res.message
