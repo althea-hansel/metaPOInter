@@ -55,6 +55,27 @@ atomtypeSphericalHarmonics = {}
 #track how many times metaPOInter gets called
 minimizeIterCount = 1
 
+#keeps track of what component is being fit
+fitting_component = 0
+# components are, in order, exchange (0),
+            #                           electrostatics (1),
+            #                           induction (2),
+            #                           dhf (3),
+            #                           dispersion (4),
+            #                           residual error (5),
+            #                           total energy (6)
+
+#track how many parameters each atomtype has
+atomtype_nparams = {}
+
+#stores running dictionary of atomtypes for POInter
+pointerParamDict = {}
+
+#store edrude_ind from POInter for each molecule
+edrude_ind = {}
+
+#store edrude_dhf from POInter for each molecule
+edrude_dhf = {}
 
 ##############################################################################
 # Class for holding the parameters from a single ab initio FF from a JSON file
@@ -308,8 +329,6 @@ def minimizeDictionaryToList():
 	"""
 	output = []
 
-	allAtomtypes.sort() #alphabetize atomtypes list
-
 	#loop over all atomtypes
 	for atomtype in allAtomtypes:
 		currentAtomtype = initialMinimizeValues[atomtype]
@@ -562,16 +581,20 @@ def averageParamsDictToList():
 	#loop over atomtypes
 	allAtomtypes.sort()
 	for atomtype in allAtomtypes:
+		nparams = 0
 		#loop over A components
 		aParams = initialAverageValues["A"][atomtype]
 		for component in energyTerms:
 			output.append(aParams[component])
+			nparams += 1
 		#B
 		output.append(initialAverageValues["B"][atomtype])
+		nparams += 1
 		#loop over C components
 		cParams = initialAverageValues["C"][atomtype]
 		for component in dispersionTerms:
 			output.append(cParams[component])
+			nparams += 1
 		#loop over aniso components
 		try:
 			anisoParams = initialAverageValues["aniso"][atomtype]
@@ -580,8 +603,10 @@ def averageParamsDictToList():
 				#loop over spherical harmonics
 				for sh in sphericalHarmonics:
 					output.append(anisoParams[component][sh])
+					nparams += 1
 		except KeyError: #catch if atomtype is not anisotropic
 			pass
+		atomtype_nparams[atomtype] = nparams
 
 	global initialValuesList
 	initialValuesList = initialValuesList + output
@@ -607,8 +632,6 @@ def map_params(inputList, fileName):
 	#make sure we have a python list and not a numpy array
 	if isinstance(inputList, np.ndarray):
 		inputList = inputList.tolist()
-
-	allAtomtypes.sort() #make sure atomtypes are alphabetical order
 
 	output = {}
 	i = 0 #use to keep track of where we are in the parameter list, updated after adding each parameter or set of parameters
@@ -646,7 +669,7 @@ def map_params(inputList, fileName):
 	with open(fileName + ".constraints", 'w') as f:
 		json.dump(output, f, indent = 4)
 
-def calc_harmonic_constraint_penalty(params, k = 1e-2):
+def calc_harmonic_constraint_penalty(params, k = 1e-5):
 	"""
 	calculates harmonic penalty for parameters differing from initial constraints
 
@@ -704,15 +727,11 @@ def make_bounds_list(parameterList):
 
 	bounds_list = []
 
-	harmonic_penalties = calc_harmonic_constraint_penalty(tuple(parameterList))
-
-	allAtomtypes.sort()
-
 	for atomtype in allAtomtypes:
 		#A params
 		for component in energyTerms:
 			if component != "Dispersion":
-				bounds_list.append((0,1e3))
+				bounds_list.append((0.0,1e3))
 				i += 1
 			else:
 				bounds_list.append((0.7,1.3))
@@ -750,19 +769,9 @@ def metaPOInter(parameterList):
 	dRMSE: list, list of total dRMSE's for each parameter being optimized
 
 	"""
-	global minimizeIterCount
-	print
-	print "Minimization iteration: " + str(minimizeIterCount) 
-	print
 
 	totalRMSE = 0
-	dRMSE = []
-
-	#make temp.constraints with current parameters
-	map_params(parameterList, "temp")
-
-	#make tuple of parameters
-	parameterTuple = tuple(parameterList)
+	dRMSE = [0.0 for i in range(len(allAtomtypes))]
 
 	#get RMSE and dRMSE for each molecule from POInter, add to running totals
 	os.chdir(scriptDir + "/abInitioSAPT")
@@ -770,34 +779,70 @@ def metaPOInter(parameterList):
 		saptFile = molecule + "_" + molecule + ".sapt"
 		#make POInter object with temp.constraints from map_params as input with .sapt file
 		pointerModel = Pointer.FitFFParameters(fit = False, energy_file = saptFile, param_file = "temp.constraints")
+		
 		#call required POInter start-up functions
 		kwargs = {"mon1": molecule, "mon2": molecule}
 		pointerModel.read_settings(['default'], kwargs)
 		pointerModel.read_energies()
 		pointerModel.read_params()
 		pointerModel.initialize_parameters()
+
+		#run drude calcs, store for future use so that we don't have to run this calculation multiple times
+		global edrude_ind
+		global edrude_dhf
+		if molecule in edrude_ind:
+			pointerModel.edrude_ind = edrude_ind[molecule]
+			pointerModel.edrude_dhf = edrude_dhf[molecule]
+		else:
+			drude_output = pointerModel.get_drude_oscillator_energy()
+			edrude_ind[molecule] = drude_output[0]
+			edrude_dhf[molecule] = drude_output[1]
+
 		#set required POInter instance variables
-		pointerModel.component = 0
+		global fitting_component
+		pointerModel.component = fitting_component
 		pointerModel.n_isotropic_params = pointerModel.default_n_isotropic_params
-		pointerModel.get_num_eij = pointerModel.generate_num_eij(parameterTuple)
 		pointerModel.final_energy_call = True
 		pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
-		#get RMSE and dRMSE, including harmonic penalty
-		pointerOutput = pointerModel.calc_leastsq_ff_fit(parameterTuple)
-		#TODO: implement option for harmonic constraints on B params
-		#harmonic_errors = calc_harmonic_constraint_penalty(parameterTuple)
-		totalRMSE += pointerOutput[0]
-		#totalRMSE += harmonic_errors[0]
-		if dRMSE == []:
-			dRMSE = pointerOutput[1].tolist()
-			#for i in range(len(harmonic_errors[1])):
-			#	dRMSE[i] += harmonic_errors[1][i]
-		else:
-			for i in range(len(dRMSE)):
-				dRMSE[i] += pointerOutput[1].tolist()[i]
-				#dRMSE[i] += harmonic_errors[1][i]
+		pointerModel.fit_bii = True
+		#make sure the order of the parameters in POInter and metaPOInter match
+		pointerModel.fit_isotropic_atomtypes.sort()
+		pointerModel.fit_anisotropic_atomtypes.sort()
+		if fitting_component != 0:
+			global pointerParamDict
+			pointerModel.params = pointerParamDict
 
-	minimizeIterCount += 1
+		#calc RMSE, dRMSE for A params
+		currentParams = tuple(parameterList)
+		print "fitting component", fitting_component, "with current parameters", currentParams
+		pointerModel.get_num_eij = pointerModel.generate_num_eij(currentParams)
+		pointerOutput = pointerModel.calc_leastsq_ff_fit(currentParams)
+
+		#add rmse, drmse to totals
+		totalRMSE += pointerOutput[0]
+		dRMSE_components = pointerOutput[1]
+		dRMSE_placeholder = 0
+		for i in range(len(allAtomtypes)):
+			dRMSE[i] += dRMSE_components[i]
+
+		#store parameter dict from POInter
+		pointerParamDict = pointerModel.params
+
+		"""#get harmonic constraints for B anc C parameters
+		#harmonic_penalties = calc_harmonic_constraint_penalty(parameterTuple)
+		#harmonic_errors = harmonic_penalties[2]
+		#harmonic_dRMSE = harmonic_penalties[1]"""
+
+		#TODO: implement for aniso atomtypes
+
+		"""#add to total RMSE and dRMSE
+		i = 5
+		for atomtype in allAtomtypes:
+			for j in range(5):
+				totalRMSE += harmonic_errors[i + j]
+				dRMSE[i + j] = harmonic_dRMSE[i + j]
+			i += atomtype_nparams[atomtype]"""
+
 	os.chdir(scriptDir)
 
 	return totalRMSE, np.asarray(dRMSE)
@@ -821,27 +866,54 @@ def optimzeGeneralParameters():
 	pgtol = -1e-17
 	ftol = 1e-17
 
-	map_params(initialValuesList,"initial_params_test")
+	#get parameter bounds for minimization
+	all_bnds = make_bounds_list(initialValuesList)
 
-	bnds = make_bounds_list(initialValuesList)
+	#optimize A parameters for each energy component, store in final_params list
+	parameterList = initialValuesList
+	global fitting_component
+	while fitting_component < 4:
 
-	res = minimize(metaPOInter,initialValuesList,method='L-BFGS-B',\
-						jac=True,\
-						options={'disp':True,'gtol':pgtol,'ftol':ftol,'maxiter':maxiter},\
-						bounds = bnds)
-	popt = res.x
-	success = res.success
-	message = res.message
+		#make list of parameters for component to pass down to POInter
+		currentParams = [parameterList[fitting_component]]
+		placeholder = 0
+		for previous_atomtype in allAtomtypes[:-1]:
+			placeholder += atomtype_nparams[previous_atomtype]
+			currentParams.append(parameterList[fitting_component + placeholder])
 
-	if not res.success:
-		print 'Warning! Optimizer did not terminate successfully, and quit with the following error message:'
-		print
-		print res.message
-		print
-		return
+		#make list of bounds for component to pass down to POInter
+		bnds = [all_bnds[fitting_component]]
+		placeholder = 0
+		for previous_atomtype in allAtomtypes[:-1]:
+			placeholder += atomtype_nparams[previous_atomtype]
+			bnds.append(all_bnds[fitting_component + placeholder])
+
+		#make temp.constraints with current parameters
+		map_params(parameterList, "temp")
+
+		res = minimize(metaPOInter,currentParams,method='L-BFGS-B',\
+							jac=True,\
+							options={'disp':True,'gtol':pgtol,'ftol':ftol,'maxiter':maxiter},\
+							bounds = bnds)
+		popt = res.x
+
+		if not res.success:
+			print 'Warning! Optimizer did not terminate successfully, and quit with the following error message:'
+			print
+			print res.message
+			print
+			return
+
+		placeholder = 0
+		for current_atomtype in allAtomtypes[:-1]:
+			for i in popt:
+				parameterList[placeholder + fitting_component] = i
+				placeholder += atomtype_nparams[current_atomtype]
+		fitting_component +=1
 
 	#write output JSON file with optimized parameters
-	map_params(popt, "optimized_params")
+	final_params = parameterList
+	map_params(final_params, "optimized_params")
 
 	#remove temp.constraints file
 	os.remove("temp.constraints")
@@ -857,6 +929,8 @@ def main():
 		useInitialParamsFile(sys.argv[1])
 		print "Importing given parameters"
 		print "Converting given initial parameter dictionary to list"
+
+		allAtomtypes.sort() #alphabetize atomtypes list
 		minimizeDictionaryToList()
 		print "Initial parameter list successfully created"
 		#TODO: get names of all molecules in library
@@ -867,6 +941,8 @@ def main():
 		importMolecularParameters()
 		print "Calculating average parameter values"
 		getInitalAverageParameters()
+
+		allAtomtypes.sort() #alphabetize atomtypes list
 		print "Converting initial parameter dictionary to list"
 		averageParamsDictToList()
 		print "Initial parameter list successfully created"
