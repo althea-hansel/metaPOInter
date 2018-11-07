@@ -11,6 +11,7 @@ from scipy.optimize import minimize
 import json
 import glob
 import math
+from sympy.utilities.iterables import flatten
 
 # Local modules
 from pointer import fit_ff_parameters as Pointer
@@ -43,6 +44,9 @@ initialValuesList = []
 #list of all atomtypes from all imported molecules
 allAtomtypes = []
 
+#stores atomtypes held by each molecule
+molecular_atomtypes = {}
+
 #list of aniso atomtypes
 anisoAtomtypes = []
 
@@ -68,14 +72,20 @@ fitting_component = 0
 #track how many parameters each atomtype has
 atomtype_nparams = {}
 
-#stores running dictionary of atomtypes for POInter
-pointerParamDict = {}
+#stores POInter objects for each molecule
+molecule_POInter_objects = {}
 
-#store edrude_ind from POInter for each molecule
-edrude_ind = {}
+#stores final parameters by component
+optimized_params = {}
 
-#store edrude_dhf from POInter for each molecule
-edrude_dhf = {}
+#store qm energies for each molecule
+qm_energies = {}
+
+#stores initial B parameters for each atomtype
+atomtype_B_params = {}
+
+#stores C parameters for each atomtype
+atomtype_C_params = {}
 
 ##############################################################################
 # Class for holding the parameters from a single ab initio FF from a JSON file
@@ -118,12 +128,17 @@ class MolecularParameters:
 
 		"""
 		self.atomtypesList = self.jsonInput.keys()
+		#add list of atomtypes to entry in molecular_atomtypes and sort
+		molecular_atomtypes[self.moleculeName] = [atomtype for atomtype in self.atomtypesList]
+		molecular_atomtypes[self.moleculeName].sort()
+		#populate molecule with atomtype instances
 		for atomtype in self.atomtypesList:
 			self.atomtypes[str(atomtype)] = self.Atomtype(self.jsonInput[atomtype], self.setAnisoFlag(self.jsonInput[atomtype]))
 			global atomtypeSphericalHarmonics
 			atomtypeSphericalHarmonics[str(atomtype)] = self.atomtypes[str(atomtype)].getSphericalHarmonics()
 			if str(atomtype) not in allAtomtypes: #add atomtype to list of all atomtypes if not already there
 				allAtomtypes.append(str(atomtype))
+
 			if self.anisoFlag and atomtype not in anisoAtomtypes:
 				anisoAtomtypes.append(str(atomtype))
 
@@ -589,6 +604,7 @@ def averageParamsDictToList():
 			nparams += 1
 		#B
 		output.append(initialAverageValues["B"][atomtype])
+		atomtype_B_params[atomtype] = initialAverageValues["B"][atomtype]
 		nparams += 1
 		#loop over C components
 		cParams = initialAverageValues["C"][atomtype]
@@ -648,7 +664,7 @@ def map_params(inputList, fileName):
 		#get C params
 		atomtypeParams["C"] = inputList[i: i + len(dispersionTerms)]
 		i = i + len(dispersionTerms)
-		#check if atomtype is anisotropic. If so, fetch spherical harmonicsand save in atomtypeParams. Also save aniso A values, with empty lists if not anisotropic
+		#check if atomtype is anisotropic. If so, fetch spherical harmonics and save in atomtypeParams. Also save aniso A values, with empty lists if not anisotropic
 		if atomtype in anisoAtomtypes:
 			atomtypeParams["sph_harm"] = atomtypeSphericalHarmonics[atomtype]
 			anisoList = []
@@ -708,14 +724,15 @@ def calc_harmonic_constraint_penalty(params, k = 1e-5):
 
 	return harmonic_error, dharmonic_error, parameter_errors
 
-def make_bounds_list(parameterList):
+def make_bounds_list(parameterList, include_B = True):
 	"""
 	makes list of tuples containing bounds for parameters. Order corresponds with parameter order [Atomtype1 A,B,C,Aniso; Atomtype2 A,B,C,Aniso; ...]
 
 	Parameters: 
 	----------
 
-	None
+	parameterList: list, input parameter values
+	include_B: boolean, dictates whether to include a bound for the B param
 
 	Returns:
 	--------
@@ -727,21 +744,19 @@ def make_bounds_list(parameterList):
 
 	bounds_list = []
 
+	global fitting_component
+
 	for atomtype in allAtomtypes:
 		#A params
-		for component in energyTerms:
-			if component != "Dispersion":
-				bounds_list.append((0.0,1e3))
-				i += 1
-			else:
-				bounds_list.append((0.7,1.3))
-				i += 1
+		if fitting_component != 4:
+			bounds_list.append((0.0,1e3))
+			i += 1
+		else:
+			bounds_list.append((0.7,1.3))
+			i += 1
 		#B param
-		bounds_list.append((1e-2,1e2))
-		i += 1
-		#C params
-		for component in dispersionTerms:
-			bounds_list.append((None,None))
+		if include_B:
+			bounds_list.append((1e-2,1e2))
 			i += 1
 		#aniso
 		if atomtype in anisoAtomtypes:
@@ -751,6 +766,204 @@ def make_bounds_list(parameterList):
 				i += 1
 
 	return bounds_list
+
+def get_fit_parameters(all_params, fit_molecule):
+	"""
+	Fetches the parameters to be fit for a given component.
+
+	Parameters
+	----------
+
+	all_params: list, parameters for all atomtypes for the given component, in form [atomtype1 A, B, aniso; atomtype2 A, B, aniso...]
+	fit_molecule: string, name of molecule being worked with
+
+	Returns
+	-------
+
+	fit_params: list, params (for the current component) to be input to POInter in format [atomtype1 A, aniso, B; atomtype2 A, aniso, B], only including atomtypes for that molecule
+
+	"""
+
+	molecule_atomtypes = molecular_atomtypes[fit_molecule]
+
+	fit_params = []
+
+	#keep track of where we are in the input list. Will be positioned at the front of whatever set of parameters we are trying to get
+	input_placeholder = 0
+
+	global fitting_component
+
+	#get parameters for each atomtype
+	for pot_atomtype in allAtomtypes:
+		# determine number of parameters
+		n_params = 1 # for A param
+		if pot_atomtype in anisoAtomtypes:
+			n_spherical_harmonics = len(atomtypeSphericalHarmonics[pot_atomtype])
+			n_params += n_spherical_harmonics
+		if fitting_component == 0:
+			n_params += 1 #if we are including the B param (exchange)
+
+		#if our molecule has this atomtype, add these parameters to the output list	
+		if pot_atomtype in molecule_atomtypes:
+			atomtype_params = all_params[input_placeholder : input_placeholder + n_params]
+			for param in atomtype_params:
+				fit_params.append(param)
+
+		input_placeholder += n_params
+
+	return fit_params
+
+def remove_C_params(parameterList):
+	"""
+	removes C parameters from parameterList of all parameters (for all atomtypes) in format [atomtype1 A, B, C, aniso; atomtype2 A, B, C, aniso...]
+
+	parameters
+	----------
+	parameterList: list, all parameters in format [atomtype1 A, B, C, aniso; atomtype2 A, B, C, aniso...]
+
+	returns
+	-------
+	outputList: list, all A, B, and aniso parameters in format [atomtype1 A, B, aniso; atomtype2 A, B, aniso...]
+	"""
+
+	input_index = 0
+	outputList = parameterList
+	for atomtype in allAtomtypes:
+		#move index counter past A and B params
+		input_index += 6
+		#add C params to global dict and delete from list
+		global atomtype_C_params
+		atomtype_C_params[atomtype] = outputList[input_index : input_index + 4]
+		del outputList[input_index : input_index + 4]
+		#move index counter past aniso params
+		if atomtype in anisoAtomtypes:
+			n_aniso_params = len(atomtypeSphericalHarmonics[atomtype])*5
+			input_index += n_aniso_params
+	return outputList
+
+def get_component_parameters(all_params):
+	""" will take all parameters and return only those for a given component
+
+	parameters
+	----------
+	all_params: list, all parameters (except C params) for all atomtypes and energy components in format [atomtype1 A, B, aniso; atomtype2 A, B, aniso...]
+
+	returns
+	-------
+	output_params: list, has parameters for a given energy component for all atomtypes in format [atomtype1 A, aniso, B; atomtype2 A, aniso, B]
+	"""
+	input_index = 0
+	output_params = []
+	global fitting_component
+	print all_params
+
+	for atomtype in allAtomtypes:
+		n_params = atomtype_nparams[atomtype] - 4 #subtract out C params
+		#get A param
+		output_params.append(all_params[input_index + fitting_component])
+		input_index += 5
+		#get aniso params
+		if atomtype in anisoAtomtypes:
+			init_input_index = input_index
+			n_spherical_harmonics = atomtypeSphericalHarmonics[atomtype]
+			for i in range(fitting_component):
+				input_index += n_spherical_harmonics
+			output_params.append(all_params[input_index : input_index + n_spherical_harmonics])
+			input_index = init_input_index
+		#get B if required (exchange)
+		if fitting_component == 0:
+			output_params.append(1.0)
+
+		#move index counter to start of next atomtype
+		input_index -= 5
+		input_index += n_params
+
+	return output_params
+
+def add_dRMSE(all_dRMSE, new_dRMSE, moleculeName):
+	""" add dRMSE returned by POInter to list of all dRMSE
+
+	parameters
+	----------
+	all_dRMSE: list, all dRMSE for all atomtypes and parameters in format corresponding to [atomtype1 A, aniso, B; atomtype2 A, aniso, B]
+	new_dRMSE: list, dRMSE returned from POInter to be added to all_dRMSE (in same format at all_dRMSE, just without some atomtypes not found in that molecule)
+	moleculeName: name of molecule
+
+	returns
+	-------
+	all_dRMSE updated with new_dRMSE added
+	"""
+
+	global fitting_component
+	mol_atomtypes = molecular_atomtypes[moleculeName]
+	all_dRMSE_index = 0
+
+	#add new dRMSE to all_dRMSE
+	new_dRMSE_index = 0
+
+	for pot_atomtype in allAtomtypes:
+		n_params = atomtype_nparams[pot_atomtype] - 4 # excluding C params which are not fit
+		if fitting_component != 0:
+			n_params -= 1 # subtract B param if not fitting exchange
+		n_params = n_params / 5 # to find numer of parameters for a single component energy
+		if pot_atomtype in mol_atomtypes:
+			for i in range(n_params):
+				all_dRMSE[all_dRMSE_index + i] += new_dRMSE[new_dRMSE_index + i]
+			new_dRMSE_index += n_params
+		all_dRMSE_index += n_params
+
+	return all_dRMSE
+
+def write_output_params_to_list(parameterDict):
+	"""
+	write parameters from optimization function to a list in format [atomtype1 A, B, C, aniso; atomtype2 A, B, C, aniso...]
+
+	parameters
+	----------
+	parameterDict: dictionary, parameters to be placed in list
+
+	returns
+	-------
+	outputList: list, in format [atomtype1 A, B, C, aniso; atomtype2 A, B, C, aniso...]
+	"""
+	outputList = []
+	input_atomtype_i = 0
+	shift = 1
+	exchange_shift = 1
+	for atomtype in allAtomtypes:
+		
+		if atomtype in anisoAtomtypes:
+			n_spherical_harmonics = atomtypeSphericalHarmonics[atomtype]
+		else:
+			n_spherical_harmonics = 0
+
+		shift = 1 + n_spherical_harmonics
+		#get A params	
+		for component in energyTerms:
+			if component == "Exchange":
+				b_scale = parameterDict[component][input_atomtype_i + n_spherical_harmonics + exchange_shift]
+				exchange_shift += 1
+			a_param = parameterDict[component][input_atomtype_i]
+			outputList.append(a_param)
+		#get B param
+		b_init_param = atomtype_B_params[atomtype]
+		new_b_param = b_init_param * b_scale
+		outputList.append(new_b_param)
+		#get C params
+		c_params = atomtype_C_params[atomtype]
+		for param in c_params:
+			outputList.append(param)
+		#get aniso
+		if atomtype in anisoAtomtypes:
+			for component in energyTerms:
+				aniso_params = parameterDict[component][input_atomtype_i + 1 : input_atomtype_i + 1 + n_spherical_harmonics]
+				for param in aniso_params:
+					outputList.append(param)
+
+		input_atomtype_i += shift
+
+	return outputList
+
 
 def metaPOInter(parameterList):
 	"""
@@ -771,77 +984,88 @@ def metaPOInter(parameterList):
 	"""
 
 	totalRMSE = 0
-	dRMSE = [0.0 for i in range(len(allAtomtypes))]
+	dRMSE = [0.0 for i in range(len(parameterList))]
+	global fitting_component
 
 	#get RMSE and dRMSE for each molecule from POInter, add to running totals
 	os.chdir(scriptDir + "/abInitioSAPT")
 	for molecule in molecules.keys():
-		saptFile = molecule + "_" + molecule + ".sapt"
-		#make POInter object with temp.constraints from map_params as input with .sapt file
-		pointerModel = Pointer.FitFFParameters(fit = False, energy_file = saptFile, param_file = "temp.constraints")
-		
-		#call required POInter start-up functions
-		kwargs = {"mon1": molecule, "mon2": molecule}
-		pointerModel.read_settings(['default'], kwargs)
-		pointerModel.read_energies()
-		pointerModel.read_params()
-		pointerModel.initialize_parameters()
+		if molecule not in molecule_POInter_objects:
+			saptFile = molecule + "_" + molecule + ".sapt"
+			#make POInter object
+			pointerModel = Pointer.FitFFParameters(fit = False, energy_file = saptFile)
 
-		#run drude calcs, store for future use so that we don't have to run this calculation multiple times
-		global edrude_ind
-		global edrude_dhf
-		if molecule in edrude_ind:
-			pointerModel.edrude_ind = edrude_ind[molecule]
-			pointerModel.edrude_dhf = edrude_dhf[molecule]
+			#call required POInter start-up functions
+			kwargs = {"mon1": molecule, "mon2": molecule}
+			pointerModel.read_settings(['default'], kwargs)
+			pointerModel.read_energies()
+			pointerModel.read_params()
+			pointerModel.initialize_parameters()
+			pointerModel.get_drude_oscillator_energy()
+			#set required POInter instance variables
+			pointerModel.n_isotropic_params = pointerModel.default_n_isotropic_params
+			pointerModel.final_energy_call = True
+			pointerModel.component = fitting_component
+
+			#make sure the order of the parameters in POInter and metaPOInter match
+			pointerModel.fit_isotropic_atomtypes.sort()
+			pointerModel.fit_anisotropic_atomtypes.sort()
+			#store POInter object for later use by subsequent calls to metaPOInter
+			molecule_POInter_objects[molecule] = pointerModel
 		else:
-			drude_output = pointerModel.get_drude_oscillator_energy()
-			edrude_ind[molecule] = drude_output[0]
-			edrude_dhf[molecule] = drude_output[1]
+			pointerModel = molecule_POInter_objects[molecule]
+			pointerModel.component = fitting_component
 
-		#set required POInter instance variables
-		global fitting_component
-		pointerModel.component = fitting_component
-		pointerModel.n_isotropic_params = pointerModel.default_n_isotropic_params
-		pointerModel.final_energy_call = True
-		pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
-		pointerModel.fit_bii = True
-		#make sure the order of the parameters in POInter and metaPOInter match
-		pointerModel.fit_isotropic_atomtypes.sort()
-		pointerModel.fit_anisotropic_atomtypes.sort()
-		if fitting_component != 0:
-			global pointerParamDict
-			pointerModel.params = pointerParamDict
+		#subtract hard constraints energy from energy to be fit and store for later use (or call if already done)
+		mol_qm_dict = qm_energies[molecule]
+		if fitting_component not in mol_qm_dict:
+			pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
+			qm_energies[molecule][fitting_component] = pointerModel.qm_fit_energy
+		else:
+			pointerModel.qm_fit_energy = qm_energies[molecule][fitting_component]
 
-		#calc RMSE, dRMSE for A params
-		currentParams = tuple(parameterList)
-		print "fitting component", fitting_component, "with current parameters", currentParams
+		#set fitting component and B coeff fitting (if exchange component)
+		if fitting_component == 0:
+			pointerModel.fit_bii = True
+			pointerModel.n_isotropic_params = 2
+
+			#set POInter instance variables required for fitting B param
+
+			i_bparams = []
+
+			param_i = 0
+			for atomtype in molecular_atomtypes[molecule]:
+				if atomtype in anisoAtomtypes:
+					num_aniso = len(atomtypeSphericalHarmonics[atomtype])
+				else:
+					num_aniso = 0
+				num_A_aniso = 1 + num_aniso
+				b_pos = param_i + num_A_aniso
+				i_bparams.append(b_pos)
+				param_i += num_A_aniso + 1
+
+			pointerModel.i_bparams = i_bparams
+
+		else:
+			pointerModel.fit_bii = False
+			pointerModel.n_isotropic_params = 1
+			n_aiso = pointerModel.n_isotropic_params if not pointerModel.fit_bii else pointerModel.n_isotropic_params - 1
+			n_aaniso = n_aiso
+
+		#calc RMSE, dRMSE
+		currentParams = tuple(get_fit_parameters(parameterList, molecule))
+		print "Fitting component", fitting_component, "with current parameters", currentParams
 		pointerModel.get_num_eij = pointerModel.generate_num_eij(currentParams)
 		pointerOutput = pointerModel.calc_leastsq_ff_fit(currentParams)
 
+		print "leastsq error: ", pointerOutput[0]
+
 		#add rmse, drmse to totals
+
 		totalRMSE += pointerOutput[0]
 		dRMSE_components = pointerOutput[1]
-		dRMSE_placeholder = 0
-		for i in range(len(allAtomtypes)):
-			dRMSE[i] += dRMSE_components[i]
 
-		#store parameter dict from POInter
-		pointerParamDict = pointerModel.params
-
-		"""#get harmonic constraints for B anc C parameters
-		#harmonic_penalties = calc_harmonic_constraint_penalty(parameterTuple)
-		#harmonic_errors = harmonic_penalties[2]
-		#harmonic_dRMSE = harmonic_penalties[1]"""
-
-		#TODO: implement for aniso atomtypes
-
-		"""#add to total RMSE and dRMSE
-		i = 5
-		for atomtype in allAtomtypes:
-			for j in range(5):
-				totalRMSE += harmonic_errors[i + j]
-				dRMSE[i + j] = harmonic_dRMSE[i + j]
-			i += atomtype_nparams[atomtype]"""
+		dRMSE = add_dRMSE(dRMSE, dRMSE_components, molecule)	
 
 	os.chdir(scriptDir)
 
@@ -860,6 +1084,9 @@ def optimzeGeneralParameters():
 	-------
 	Global RMSE for library
 	"""
+	#initialize qm energies dictionaries for each molecule
+	global qm_energies
+	qm_energies = {mol : {} for mol in molecules}
 
 	#set parameters for minimize function
 	maxiter = 5000
@@ -867,35 +1094,32 @@ def optimzeGeneralParameters():
 	ftol = 1e-17
 
 	#get parameter bounds for minimization
-	all_bnds = make_bounds_list(initialValuesList)
+	all_bnds = make_bounds_list(initialValuesList, True)
+	a_bnds = make_bounds_list(initialValuesList, False)
 
 	#optimize A parameters for each energy component, store in final_params list
 	parameterList = initialValuesList
+	metaPOInter_initial_list = remove_C_params(parameterList)
 	global fitting_component
 	while fitting_component < 4:
 
+		#make list of bounds for component to pass down to POInter. Only include B bound if fitting exchange
+		if fitting_component == 0:
+			bnds = all_bnds
+		else:
+			bnds = a_bnds
+
 		#make list of parameters for component to pass down to POInter
-		currentParams = [parameterList[fitting_component]]
-		placeholder = 0
-		for previous_atomtype in allAtomtypes[:-1]:
-			placeholder += atomtype_nparams[previous_atomtype]
-			currentParams.append(parameterList[fitting_component + placeholder])
+		#get only parameters for the component we are fitting
+		metaPOInter_input = get_component_parameters(metaPOInter_initial_list)
 
-		#make list of bounds for component to pass down to POInter
-		bnds = [all_bnds[fitting_component]]
-		placeholder = 0
-		for previous_atomtype in allAtomtypes[:-1]:
-			placeholder += atomtype_nparams[previous_atomtype]
-			bnds.append(all_bnds[fitting_component + placeholder])
-
-		#make temp.constraints with current parameters
-		map_params(parameterList, "temp")
-
-		res = minimize(metaPOInter,currentParams,method='L-BFGS-B',\
+		res = minimize(metaPOInter,metaPOInter_input,method='L-BFGS-B',\
 							jac=True,\
 							options={'disp':True,'gtol':pgtol,'ftol':ftol,'maxiter':maxiter},\
 							bounds = bnds)
+
 		popt = res.x
+		print "Optimized parameters for component " + str(fitting_component) + " : " + str(popt)
 
 		if not res.success:
 			print 'Warning! Optimizer did not terminate successfully, and quit with the following error message:'
@@ -904,19 +1128,15 @@ def optimzeGeneralParameters():
 			print
 			return
 
-		placeholder = 0
-		for current_atomtype in allAtomtypes[:-1]:
-			for i in popt:
-				parameterList[placeholder + fitting_component] = i
-				placeholder += atomtype_nparams[current_atomtype]
-		fitting_component +=1
+		global optimized_params
+		optimized_params[energyTerms[fitting_component]] = popt
+		
+		fitting_component += 1
 
 	#write output JSON file with optimized parameters
-	final_params = parameterList
-	map_params(final_params, "optimized_params")
-
-	#remove temp.constraints file
-	os.remove("temp.constraints")
+	optimized_params["Dispersion"] = [1.0 for atomtype in allAtomtypes]
+	final_params_list = write_output_params_to_list(optimized_params)
+	map_params(final_params_list, "optimized_params")
 
 	print "==========================================================================="
 	print " Optimized parameters successfully written to optimized_params.constraints "
