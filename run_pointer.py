@@ -6,6 +6,7 @@ settings['mon1'] = 'ethane'
 settings['mon2'] = 'ethane'
 settings['ofile_prefix'] = 'output/fit_exp_'
 settings['ofile_suffix'] = '_unconstrained'
+settings['fit_bii'] = False
 
 settings_files = ['mastiff']
 

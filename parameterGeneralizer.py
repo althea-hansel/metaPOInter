@@ -16,9 +16,15 @@ from sympy.utilities.iterables import flatten
 # Local modules
 from pointer import fit_ff_parameters as Pointer
 
+#import settings file
+import settings as generalizer_settings
+
 # Global variables
 
 scriptDir = os.getcwd()
+
+#set variable to fit bii in metaPOInter
+fit_b = generalizer_settings.fit_b
 
 #variable used so store imported JSON dictionaries when working with library of ab initio FF's
 inputJsons = {}
@@ -27,7 +33,7 @@ inputJsons = {}
 parameterTypes = ['A', 'B', 'C', 'aniso']
 
 #names of energy components
-energyTerms = ['Exchange', 'Electrostatics', 'Induction', 'Dhf', 'Dispersion']
+energyComponents = ['Exchange', 'Electrostatics', 'Induction', 'Dhf', 'Dispersion']
 
 #names of disperision (C) components
 dispersionTerms = ['C6', 'C8', 'C10', 'C12']
@@ -87,6 +93,15 @@ atomtype_B_params = {}
 #stores C parameters for each atomtype
 atomtype_C_params = {}
 
+#stores drude charge for each atomtype
+atomtype_drude_charges = {}
+
+#flag for if drude calculation has already been performed for a given molecule
+drude_flags = {}
+
+#collects total lsq_error for each component
+component_lsq_error = {component : 0.0 for component in energyComponents}
+
 ##############################################################################
 # Class for holding the parameters from a single ab initio FF from a JSON file
 ##############################################################################
@@ -131,14 +146,17 @@ class MolecularParameters:
 		#add list of atomtypes to entry in molecular_atomtypes and sort
 		molecular_atomtypes[self.moleculeName] = [atomtype for atomtype in self.atomtypesList]
 		molecular_atomtypes[self.moleculeName].sort()
-		#populate molecule with atomtype instances
+		#populate molecule with atomtype objects
 		for atomtype in self.atomtypesList:
 			self.atomtypes[str(atomtype)] = self.Atomtype(self.jsonInput[atomtype], self.setAnisoFlag(self.jsonInput[atomtype]))
+			#store spherical harmonics and drude charges for later access
 			global atomtypeSphericalHarmonics
 			atomtypeSphericalHarmonics[str(atomtype)] = self.atomtypes[str(atomtype)].getSphericalHarmonics()
-			if str(atomtype) not in allAtomtypes: #add atomtype to list of all atomtypes if not already there
+			atomtype_drude_charges[str(atomtype)] = self.atomtypes[str(atomtype)].get_drude_charge()
+			#add atomtype to list of all atomtypes if not already there
+			if str(atomtype) not in allAtomtypes:
 				allAtomtypes.append(str(atomtype))
-
+			#if atomtype is anisotropic, add to list of anisotropic atomtypes
 			if self.anisoFlag and atomtype not in anisoAtomtypes:
 				anisoAtomtypes.append(str(atomtype))
 
@@ -149,6 +167,7 @@ class MolecularParameters:
 			self.parameters["A"] = self.Parameters(inputDict['A'], 'A')
 			self.parameters["B"] = inputDict['B'] #since only one B value for each atomtype
 			self.parameters["C"] = self.Parameters(inputDict['C'], 'C')
+			self.drude_charge = inputDict['drude_charge']
 			self.anisoFlag = anisoFlag
 			self.sphericalHarmonics = []
 			if anisoFlag:
@@ -170,6 +189,8 @@ class MolecularParameters:
 		def getSphericalHarmonics(self):
 			return self.sphericalHarmonics
 
+		def get_drude_charge(self):
+			return self.drude_charge
 
 		class Parameters:
 			#creates dictionary of parameter values for individual energy terms
@@ -229,11 +250,11 @@ class MolecularParameters:
 
 				"""
 				output = {}
-				for i in range(len(energyTerms)):
+				for i in range(len(energyComponents)):
 					innerOutput = {}
 					for j in range(len(sphericalHarmonics)):
 						innerOutput[str(sphericalHarmonics[j])] = inputList[i][j]
-					output[energyTerms[i]] = innerOutput
+					output[energyComponents[i]] = innerOutput
 				return output
 
 			def populateCvalues(self, inputList):
@@ -349,7 +370,7 @@ def minimizeDictionaryToList():
 		currentAtomtype = initialMinimizeValues[atomtype]
 		#loop over A energy components
 		aParams = currentAtomtype["A"]
-		for component in energyTerms:
+		for component in energyComponents:
 			output.append(aParams[component])
 		#B
 		output.append(currentAtomtype["B"])
@@ -360,7 +381,7 @@ def minimizeDictionaryToList():
 		#loop over aniso energy components
 		anisoParams = currentAtomtype["aniso"]
 		sphericalHarmonics = currentAtomtype.getSphericalHarmonics()
-		for component in energyTerms:
+		for component in energyComponents:
 			#loop over aniso spherical harmonics
 			for sh in sphericalHarmonics:
 				output.append(anisoParams[component][sh])
@@ -409,24 +430,24 @@ def averageAvalues():
 		currentMolecule = molecules[molecule]
 		for atomtype in allAtomtypes:
 			if atomtype in allAvalsRaw: #if we already have this atomtype, add parameters to existing list
-				for term in energyTerms:
+				for component in energyComponents:
 					try: #try/except allows for multiple atomtypes in different input files
-						allAvalsRaw[atomtype][term].append(currentMolecule[atomtype]["A"][term])
+						allAvalsRaw[atomtype][component].append(currentMolecule[atomtype]["A"][component])
 					except KeyError:
 						pass
 			else:
-				termsDict = {}
-				for term in energyTerms:
+				componentsDict = {}
+				for component in energyComponents:
 					try:
-						termsDict[term] = [currentMolecule[atomtype]["A"][term]]
-						allAvalsRaw[atomtype] = termsDict
+						componentsDict[component] = [currentMolecule[atomtype]["A"][component]]
+						allAvalsRaw[atomtype] = componentsDict
 					except KeyError:
 						pass
 	for atomtype in allAvalsRaw: #calculate averages from list for each atomtyp for each energy type
-		termAvgs = {}
-		for term in energyTerms:
-			termAvgs[term] = sum(allAvalsRaw[atomtype][term])/len(allAvalsRaw[atomtype][term])
-		allAvalsOut[atomtype] = termAvgs
+		componentAvgs = {}
+		for component in energyComponents:
+			componentAvgs[component] = sum(allAvalsRaw[atomtype][component])/len(allAvalsRaw[atomtype][component])
+		allAvalsOut[atomtype] = componentAvgs
 	return allAvalsOut
 
 def averageBvalues():
@@ -525,31 +546,31 @@ def averageAnisoValues():
 					currentAnisoParams = currentAtomtype["aniso"]
 					currentSphericalHarmonics = currentAtomtype.getSphericalHarmonics()
 					if atomtype in allAnisoValsRaw: #check if we already have a list for this atomtype
-						for energyTerm in energyTerms:
-							currentValues = currentAnisoParams[energyTerm]
+						for energycomponent in energyComponents:
+							currentValues = currentAnisoParams[energycomponent]
 							for sh in currentSphericalHarmonics:
-								allAnisoValsRaw[atomtype][energyTerm][sh].append(currentValues[sh])
+								allAnisoValsRaw[atomtype][energycomponent][sh].append(currentValues[sh])
 					else:
-						energyTermValues = {}
-						for energyTerm in energyTerms:
-							currentValues = currentAnisoParams[energyTerm]
-							shValues = {} #store values for spherical harmonics for a given energy term
+						energycomponentValues = {}
+						for energycomponent in energyComponents:
+							currentValues = currentAnisoParams[energycomponent]
+							shValues = {} #store values for spherical harmonics for a given energy component
 							for sh in currentSphericalHarmonics:
 								shValues[sh] = [currentValues[sh]]
-							energyTermValues[energyTerm] = shValues
-						allAnisoValsRaw[atomtype] = energyTermValues
+							energycomponentValues[energycomponent] = shValues
+						allAnisoValsRaw[atomtype] = energycomponentValues
 			except KeyError:
 				pass
 	#perform averaging
 	for atomtype in allAnisoValsRaw:
-		termsAvg = {}
-		for term in energyTerms:
-			energyTermsAvgs = {}
-			currentValues = allAnisoValsRaw[atomtype][term]
+		componentsAvg = {}
+		for component in energyComponents:
+			energyComponentsAvgs = {}
+			currentValues = allAnisoValsRaw[atomtype][component]
 			for sh in currentValues:
-				energyTermsAvgs[str(sh)] = sum(currentValues[sh])/len(currentValues[sh])
-			termsAvg[str(term)] = energyTermsAvgs
-		allAnisoValsOut[atomtype] = termsAvg
+				energyComponentsAvgs[str(sh)] = sum(currentValues[sh])/len(currentValues[sh])
+			componentsAvg[str(component)] = energyComponentsAvgs
+		allAnisoValsOut[atomtype] = componentsAvg
 	return allAnisoValsOut
 
 def getInitalAverageParameters():
@@ -599,7 +620,7 @@ def averageParamsDictToList():
 		nparams = 0
 		#loop over A components
 		aParams = initialAverageValues["A"][atomtype]
-		for component in energyTerms:
+		for component in energyComponents:
 			output.append(aParams[component])
 			nparams += 1
 		#B
@@ -615,7 +636,7 @@ def averageParamsDictToList():
 		try:
 			anisoParams = initialAverageValues["aniso"][atomtype]
 			sphericalHarmonics = atomtypeSphericalHarmonics[atomtype]
-			for component in energyTerms:
+			for component in energyComponents:
 				#loop over spherical harmonics
 				for sh in sphericalHarmonics:
 					output.append(anisoParams[component][sh])
@@ -629,7 +650,7 @@ def averageParamsDictToList():
 
 ##################################################################################
 # metaPOInter and helper functions
-# metaPOInter interfaces with POInter to get RMSE and dRMSE for each parameter set
+# metaPOInter interfaces with POInter to get lsq_error and dlsq_error for each parameter set
 ##################################################################################
 
 def map_params(inputList, fileName):
@@ -675,10 +696,9 @@ def map_params(inputList, fileName):
 		else:
 			atomtypeParams["sph_harm"] = []
 			atomtypeParams["aniso"] = [[],[],[],[],[]]
-		if atomtype == "C":
-			atomtypeParams["drude_charge"] = -0.774024183257736 #TODO: change to actual values
-		else:
-			atomtypeParams["drude_charge"] = -0.587568966478328 # TODO: change to actual values
+		#set drude charge
+		global atomtype_drude_charges
+		atomtypeParams["drude_charge"] = atomtype_drude_charges[atomtype]
 		output[atomtype] = atomtypeParams
 
 	#write .constraints file with parameters from list
@@ -880,26 +900,26 @@ def get_component_parameters(all_params):
 
 	return output_params
 
-def add_dRMSE(all_dRMSE, new_dRMSE, moleculeName):
-	""" add dRMSE returned by POInter to list of all dRMSE
+def add_dlsq_error(all_dlsq_error, new_dlsq_error, moleculeName):
+	""" add dlsq_error returned by POInter to list of all dlsq_error
 
 	parameters
 	----------
-	all_dRMSE: list, all dRMSE for all atomtypes and parameters in format corresponding to [atomtype1 A, aniso, B; atomtype2 A, aniso, B]
-	new_dRMSE: list, dRMSE returned from POInter to be added to all_dRMSE (in same format at all_dRMSE, just without some atomtypes not found in that molecule)
+	all_dlsq_error: list, all dlsq_error for all atomtypes and parameters in format corresponding to [atomtype1 A, aniso, B; atomtype2 A, aniso, B]
+	new_dlsq_error: list, dlsq_error returned from POInter to be added to all_dlsq_error (in same format at all_dlsq_error, just without some atomtypes not found in that molecule)
 	moleculeName: name of molecule
 
 	returns
 	-------
-	all_dRMSE updated with new_dRMSE added
+	all_dlsq_error updated with new_dlsq_error added
 	"""
 
 	global fitting_component
 	mol_atomtypes = molecular_atomtypes[moleculeName]
-	all_dRMSE_index = 0
+	all_dlsq_error_index = 0
 
-	#add new dRMSE to all_dRMSE
-	new_dRMSE_index = 0
+	#add new dlsq_error to all_dlsq_error
+	new_dlsq_error_index = 0
 
 	for pot_atomtype in allAtomtypes:
 		n_params = atomtype_nparams[pot_atomtype] - 4 # excluding C params which are not fit
@@ -908,11 +928,11 @@ def add_dRMSE(all_dRMSE, new_dRMSE, moleculeName):
 		n_params = n_params / 5 # to find numer of parameters for a single component energy
 		if pot_atomtype in mol_atomtypes:
 			for i in range(n_params):
-				all_dRMSE[all_dRMSE_index + i] += new_dRMSE[new_dRMSE_index + i]
-			new_dRMSE_index += n_params
-		all_dRMSE_index += n_params
+				all_dlsq_error[all_dlsq_error_index + i] += new_dlsq_error[new_dlsq_error_index + i]
+			new_dlsq_error_index += n_params
+		all_dlsq_error_index += n_params
 
-	return all_dRMSE
+	return all_dlsq_error
 
 def write_output_params_to_list(parameterDict):
 	"""
@@ -939,7 +959,7 @@ def write_output_params_to_list(parameterDict):
 
 		shift = 1 + n_spherical_harmonics
 		#get A params	
-		for component in energyTerms:
+		for component in energyComponents:
 			if component == "Exchange":
 				b_scale = parameterDict[component][input_atomtype_i + n_spherical_harmonics + exchange_shift]
 				exchange_shift += 1
@@ -955,7 +975,7 @@ def write_output_params_to_list(parameterDict):
 			outputList.append(param)
 		#get aniso
 		if atomtype in anisoAtomtypes:
-			for component in energyTerms:
+			for component in energyComponents:
 				aniso_params = parameterDict[component][input_atomtype_i + 1 : input_atomtype_i + 1 + n_spherical_harmonics]
 				for param in aniso_params:
 					outputList.append(param)
@@ -964,10 +984,75 @@ def write_output_params_to_list(parameterDict):
 
 	return outputList
 
+def get_updated_B_from_exchange(exchange_params):
+	""" get B parameters from list output from exchange fitting
+
+
+	"""
+	exchange_shift = 1
+	input_atomtype_i = 0
+	shift = 1
+	output_B_params = []
+
+	for atomtype in allAtomtypes:
+		if atomtype in anisoAtomtypes:
+			n_spherical_harmonics = atomtypeSphericalHarmonics[atomtype]
+		else:
+			n_spherical_harmonics = 0
+
+		b_scale = exchange_params[input_atomtype_i + n_spherical_harmonics + exchange_shift]
+		exchange_shift += 1
+
+		b_init_param = atomtype_B_params[atomtype]
+		new_b_param = b_init_param * b_scale
+		output_B_params.append(new_b_param)
+
+		input_atomtype_i += shift
+
+	return output_B_params
+
+def calc_disp_lsq_error():
+	"""
+	calculate the lsq_error for the dispersion component
+
+	parameters
+	----------
+	none
+
+	returns
+	-------
+	total_lsq_error: float, sum of all lsq_error for each individual molecular dispersion component
+	"""
+	#set fitting component for dispersion
+	global fitting_component
+	fitting_component = 4
+
+	total_lsq_error = 0.0
+
+	for molecule in molecules.keys():
+		#get POInter object and setting fitting_component
+		pointerModel = molecule_POInter_objects[molecule]
+		pointerModel.component = fitting_component
+		#get qm energies
+		pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
+		#set POInter instance variables
+		pointerModel.fit_bii = False
+		pointerModel.n_isotropic_params = 1
+		n_aiso = pointerModel.n_isotropic_params if not pointerModel.fit_bii else pointerModel.n_isotropic_params - 1
+		n_aaniso = n_aiso
+		#calc lsq_error, dlsq_error
+		molecule_atomtypes = molecular_atomtypes[molecule]
+		currentParams = tuple(1.0 for atomtype in molecule_atomtypes)
+		print "Fitting component", fitting_component, "with current parameters", currentParams
+		pointerModel.get_num_eij = pointerModel.generate_num_eij(currentParams)
+		pointerOutput = pointerModel.calc_leastsq_ff_fit(currentParams)
+		total_lsq_error += pointerOutput[0]
+
+	return total_lsq_error
 
 def metaPOInter(parameterList):
 	"""
-	Interface function with POInter code. Called by minimize(), will get RMSE and dRMSE for each molecule in library, returns total RMSE and total dRMSE
+	Interface function with POInter code. Called by minimize(), will get lsq_error and dlsq_error for each molecule in library, returns total lsq_error and total dlsq_error
 
 	Parameters
 	----------
@@ -977,17 +1062,17 @@ def metaPOInter(parameterList):
 	Returns
 	-------
 
-	totalRMSE: float, sum RMSE for entire library of molecules
+	total_lsq_error: float, sum lsq_error for entire library of molecules
 
-	dRMSE: list, list of total dRMSE's for each parameter being optimized
+	dlsq_error: list, list of total dlsq_error's for each parameter being optimized
 
 	"""
 
-	totalRMSE = 0
-	dRMSE = [0.0 for i in range(len(parameterList))]
+	total_lsq_error = 0
+	dlsq_error = [0.0 for i in range(len(parameterList))]
 	global fitting_component
 
-	#get RMSE and dRMSE for each molecule from POInter, add to running totals
+	#get lsq_error and dlsq_error for each molecule from POInter, add to running totals
 	os.chdir(scriptDir + "/abInitioSAPT")
 	for molecule in molecules.keys():
 		if molecule not in molecule_POInter_objects:
@@ -1001,7 +1086,6 @@ def metaPOInter(parameterList):
 			pointerModel.read_energies()
 			pointerModel.read_params()
 			pointerModel.initialize_parameters()
-			pointerModel.get_drude_oscillator_energy()
 			#set required POInter instance variables
 			pointerModel.n_isotropic_params = pointerModel.default_n_isotropic_params
 			pointerModel.final_energy_call = True
@@ -1012,11 +1096,17 @@ def metaPOInter(parameterList):
 			pointerModel.fit_anisotropic_atomtypes.sort()
 			#store POInter object for later use by subsequent calls to metaPOInter
 			molecule_POInter_objects[molecule] = pointerModel
+			#set molecule drude flag to false
+			drude_flags[molecule] = False
 		else:
 			pointerModel = molecule_POInter_objects[molecule]
 			pointerModel.component = fitting_component
 
-		#subtract hard constraints energy from energy to be fit and store for later use (or call if already done)
+		#get drude energy if component 1
+		if fitting_component == 1 and not drude_flags[molecule]:
+			pointerModel.get_drude_oscillator_energy()
+			drude_flags[molecule] = True
+		#subtract hard constraints energy from energy to be fit
 		mol_qm_dict = qm_energies[molecule]
 		if fitting_component not in mol_qm_dict:
 			pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
@@ -1052,24 +1142,29 @@ def metaPOInter(parameterList):
 			n_aiso = pointerModel.n_isotropic_params if not pointerModel.fit_bii else pointerModel.n_isotropic_params - 1
 			n_aaniso = n_aiso
 
-		#calc RMSE, dRMSE
+		#calc lsq_error, dlsq_error
 		currentParams = tuple(get_fit_parameters(parameterList, molecule))
 		print "Fitting component", fitting_component, "with current parameters", currentParams
 		pointerModel.get_num_eij = pointerModel.generate_num_eij(currentParams)
 		pointerOutput = pointerModel.calc_leastsq_ff_fit(currentParams)
 
+		print
 		print "leastsq error: ", pointerOutput[0]
+		print
 
-		#add rmse, drmse to totals
+		#add lsq_error, dlsq_error to totals
 
-		totalRMSE += pointerOutput[0]
-		dRMSE_components = pointerOutput[1]
+		total_lsq_error += pointerOutput[0]
+		dlsq_error_components = pointerOutput[1]
 
-		dRMSE = add_dRMSE(dRMSE, dRMSE_components, molecule)	
+		dlsq_error = add_dlsq_error(dlsq_error, dlsq_error_components, molecule)	
 
 	os.chdir(scriptDir)
 
-	return totalRMSE, np.asarray(dRMSE)
+	#store total_lsq_error
+	component_lsq_error[energyComponents[fitting_component]] = total_lsq_error
+
+	return total_lsq_error, np.asarray(dlsq_error)
 
 def optimzeGeneralParameters():
 	"""
@@ -1082,7 +1177,7 @@ def optimzeGeneralParameters():
 
 	Returns
 	-------
-	Global RMSE for library
+	Global lsq_error for library
 	"""
 	#initialize qm energies dictionaries for each molecule
 	global qm_energies
@@ -1111,6 +1206,10 @@ def optimzeGeneralParameters():
 
 		#make list of parameters for component to pass down to POInter
 		#get only parameters for the component we are fitting
+
+		#TODO: make so user can choose whether or not to fit B params
+		#TODO: make sure input B params are the same for every molecule
+			#TODO: use same .exp file ()
 		metaPOInter_input = get_component_parameters(metaPOInter_initial_list)
 
 		res = minimize(metaPOInter,metaPOInter_input,method='L-BFGS-B',\
@@ -1129,7 +1228,17 @@ def optimzeGeneralParameters():
 			return
 
 		global optimized_params
-		optimized_params[energyTerms[fitting_component]] = popt
+		optimized_params[energyComponents[fitting_component]] = popt
+
+		#reset new B params in POInter objects after fitting exchange component
+		if fitting_component == 0:
+			updated_B_params = get_updated_B_from_exchange(popt)
+			for mol in molecules.keys():
+				i = 0
+				for atomtype in allAtomtypes:
+					pointerModel = molecule_POInter_objects[mol]
+					pointerModel.params[atomtype][0]['B'] = updated_B_params[i]
+					i += 1
 		
 		fitting_component += 1
 
@@ -1137,6 +1246,16 @@ def optimzeGeneralParameters():
 	optimized_params["Dispersion"] = [1.0 for atomtype in allAtomtypes]
 	final_params_list = write_output_params_to_list(optimized_params)
 	map_params(final_params_list, "optimized_params")
+
+	#calc dispersion lsq_error and store
+	disp_lsq_error = calc_disp_lsq_error()
+	component_lsq_error[energyComponents[fitting_component]] = disp_lsq_error
+
+	#write lsq_error output file
+	with open("component_lsq_error.txt", 'w') as f:
+		for component in energyComponents:
+			f.write(component + ":" + '\t')
+			f.write(str(component_lsq_error[component]) + '\n')
 
 	print "==========================================================================="
 	print " Optimized parameters successfully written to optimized_params.constraints "
