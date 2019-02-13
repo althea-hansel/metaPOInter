@@ -153,7 +153,7 @@ def create_param_file(mon1,mon2,input_sapt, constraints, cn_coeffs,
         anisotropy_terms2, anisotropy_axes2 = get_anisotropy_terms(mon2)
         anisotropy_terms1.update(anisotropy_terms2)
         f.write('\nLIST OF ANISOTROPIC ATOMTYPES\n')
-        for k, v in anisotropy_terms1.iteritems():
+        for k, v in anisotropy_terms1.items():
             template = '{:5s}'*(len(v)+1) + '\n'
             f.write(template.format(k,*v))
         f.write('\n')
@@ -373,7 +373,7 @@ dimer_dir = mon1 + '_' + mon2 +'/'
 
 # Copy relevant files for the dimer pair to the dimer directory
 sapt_file = sapt_dir + mon1 + '_' + mon2 + '.sapt'
-print sapt_file
+print(sapt_file)
 subprocess.call(['cp', sapt_file, '.'])
 
 # Change to the dimer directory, correct the sapt file

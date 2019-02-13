@@ -1,6 +1,6 @@
 Importing configuration settings from the following files:
-	C:\Users\Theodore\Apps\pointer\methods\default.pyc
-	C:\Users\Theodore\Apps\pointer\methods\mastiff.pyc
+	C:\Users\Althea\Apps\pointer\methods\default.py
+	C:\Users\Althea\Apps\pointer\methods\mastiff.py
 
 Current Program Settings:
 aij_combination_rule                     geometric
@@ -11,8 +11,9 @@ constraint_files                         []
 drude_method                             multipole-gradient
 drude_read_file                          edrudes.dat
 electrostatic_damping_type               None
-energy_file                              input/ethane_ethane.sapt
+energy_file                              input/butane_butane.sapt
 exact_radial_correction                  False
+exponent_files                           []
 fit_bii                                  False
 fit_dispersion                           anisotropic
 fit_residuals                            False
@@ -22,10 +23,10 @@ include_slater_charge_penetration        False
 induction_damping_type                   Thole
 inputdir                                 input/
 lone_pair_flags                          ['Du', 'lp']
-mon1                                     ethane
-mon2                                     ethane
-multipole_file1                          input/ethane_ISA_L2.mom
-multipole_file2                          input/ethane_ISA_L2.mom
+mon1                                     butane
+mon2                                     butane
+multipole_file1                          input/butane_ISA_L2.mom
+multipole_file2                          input/butane_ISA_L2.mom
 multipoles_suffix                        _ISA_L2.mom
 ofile_prefix                             output/fit_exp_
 ofile_suffix                             _unconstrained

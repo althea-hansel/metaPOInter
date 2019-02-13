@@ -2,6 +2,50 @@
 # Known Bugs:
 
 #######################################
+"""
+This Parameter Generalizer is designed to generate general force field parameters from libraries of ab initio MASTIFF force fields.
+
+This program requires the MASTIFF fitting package POInter stored as a local module named pointer in python path.
+
+This program was designed to be run using the Anaconda python distribution based on python 2.7
+
+Required input directories and files (in same working directory as this script):
+################################################################################
+dir generalizerInput (or other specified in settings file):
+	.sapt files for all ab initio FF
+	dir input:
+		all input files required by POInter
+
+dir abInitioConstraints (or other specified in settings file):
+	.constraints files with parameters for all ab initio FF
+
+settings.py: see example
+
+Output directories and files:
+#############################
+optimized_params.constraints
+
+global_exponents.exp
+
+dir dim_fits (or other specified in settings file):
+	dir (for each dimer):
+		coeffs.out
+		dhf.dat (all .dat files contain DFT-SAPT energy vs FF energy for each dimer pair)
+		dispersion.dat
+		electrostatics.dat
+		exchange.dat
+		induction.dat
+		total_energy.dat
+
+Program Flow Description
+#####################
+
+The basic purpose of this program is to take ab initio parameters and fit them to multiple dimers. The program starts by reading in the parameters from the ab initio FF and storing them in the objects created below. Currently, the average of all ab initio parameters for a given atomtype is used as the starting point for optimization. The parameters are optimized for the minimal least-squared-error summed across all dimers for a given atomtype. 
+
+Written by Althea Hansel, Harvey Mudd College '19 as part of Undergraduate Senior Thesis
+
+"""
+#TODO: where are "optimized" C params in output from?
 
 # Standard packages
 import numpy as np
@@ -15,16 +59,13 @@ from sympy.utilities.iterables import flatten
 
 # Local modules
 from pointer import fit_ff_parameters as Pointer
-
-#import settings file
 import settings as generalizer_settings
 
+##################
 # Global variables
+##################
 
 scriptDir = os.getcwd()
-
-#set variable to fit bii in metaPOInter
-fit_b = generalizer_settings.fit_b
 
 #variable used so store imported JSON dictionaries when working with library of ab initio FF's
 inputJsons = {}
@@ -47,25 +88,22 @@ initialAverageValues = {}
 #input list for minimize function
 initialValuesList = []
 
-#list of all atomtypes from all imported molecules
+#list of all atomtypes from all imported dimers
 allAtomtypes = []
 
-#stores atomtypes held by each molecule
-molecular_atomtypes = {}
+#stores atomtypes held by each dimers
+dimer_atomtypes = {}
 
 #list of aniso atomtypes
 anisoAtomtypes = []
 
-#contains all imported molecular parameters
-molecules = {}
+#contains all imported dimecular parameters
+dimers = {}
 
 #store a list of spherical harmonics for different atomtypes
 atomtypeSphericalHarmonics = {}
 
-#track how many times metaPOInter gets called
-minimizeIterCount = 1
-
-#keeps track of what component is being fit
+#track what component is being fit
 fitting_component = 0
 # components are, in order, exchange (0),
             #                           electrostatics (1),
@@ -78,14 +116,17 @@ fitting_component = 0
 #track how many parameters each atomtype has
 atomtype_nparams = {}
 
-#stores POInter objects for each molecule
-molecule_POInter_objects = {}
+#stores POInter objects for each dimer
+dimer_POInter_objects = {}
 
 #stores final parameters by component
 optimized_params = {}
 
-#store qm energies for each molecule
+#store qm energies for each dimer
 qm_energies = {}
+
+#store ff energy for each dimer
+ff_energies = {}
 
 #stores initial B parameters for each atomtype
 atomtype_B_params = {}
@@ -96,22 +137,25 @@ atomtype_C_params = {}
 #stores drude charge for each atomtype
 atomtype_drude_charges = {}
 
-#flag for if drude calculation has already been performed for a given molecule
+#flag for if drude calculation has already been performed for a given dimer
 drude_flags = {}
 
 #collects total lsq_error for each component
 component_lsq_error = {component : 0.0 for component in energyComponents}
 
-##############################################################################
-# Class for holding the parameters from a single ab initio FF from a JSON file
-##############################################################################
+#flag for if isotropic dispersion should be scaled
+scale_iso_disp = generalizer_settings.scale_iso_disp
 
-class MolecularParameters:
-	#creates object to hold parameters for an individual molecular ab initio FF
+####################################################################################################
+# Class for holding the parameters from a single ab initio FF imported from a JSON .constraints file
+####################################################################################################
 
-	def __init__(self, jsonInput, molecule):
+class dimecularParameters:
+	#creates object to hold parameters for an individual dimecular ab initio FF
+
+	def __init__(self, jsonInput, dimer):
 		self.jsonInput = jsonInput
-		self.moleculeName = molecule
+		self.dimerName = dimer
 		self.anisoFlag = False
 		self.atomtypes = {}
 		self.atomtypesList = []
@@ -142,11 +186,11 @@ class MolecularParameters:
 		none
 
 		"""
-		self.atomtypesList = self.jsonInput.keys()
-		#add list of atomtypes to entry in molecular_atomtypes and sort
-		molecular_atomtypes[self.moleculeName] = [atomtype for atomtype in self.atomtypesList]
-		molecular_atomtypes[self.moleculeName].sort()
-		#populate molecule with atomtype objects
+		self.atomtypesList = list(self.jsonInput.keys())
+		#add list of atomtypes to entry in dimer_atomtypes and sort
+		dimer_atomtypes[self.dimerName] = [atomtype for atomtype in self.atomtypesList]
+		dimer_atomtypes[self.dimerName].sort()
+		#populate dimer with atomtype objects
 		for atomtype in self.atomtypesList:
 			self.atomtypes[str(atomtype)] = self.Atomtype(self.jsonInput[atomtype], self.setAnisoFlag(self.jsonInput[atomtype]))
 			#store spherical harmonics and drude charges for later access
@@ -161,7 +205,7 @@ class MolecularParameters:
 				anisoAtomtypes.append(str(atomtype))
 
 	class Atomtype:
-		#creates object to store parameters for an atomtype within a molecule
+		#creates object to store parameters for an atomtype within a dimer
 		def __init__(self, inputDict, anisoFlag = False):
 			self.parameters = {}
 			self.parameters["A"] = self.Parameters(inputDict['A'], 'A')
@@ -297,7 +341,7 @@ def readJson(filePath):
 	return json_data
 
 def importParameters():
-	"""import all parameters from JSON files. Finds all .constraints files in directory of initial constrait files, converts JSON to dictionary and stores in global dictionary of initial parameters with molecule name as key
+	"""import all parameters from JSON files. Finds all .constraints files in directory of initial constrait files, converts JSON to dictionary and stores in global dictionary of initial parameters with dimer name as key
 
 	Parameters
 	----------
@@ -308,48 +352,51 @@ def importParameters():
 	None
 
 	"""
+	inputDir = generalizer_settings.constraints_input_directory
+
 	try:
-		os.chdir(scriptDir + '/abInitioConstraints')
+		os.chdir(scriptDir + inputDir)
 		#get list of all constraint (ab initio) files
 		file_list = glob.glob("*.constraints")
 		file_list.sort()
 		
 		global inputJsons
 		inputJsons = {}
-		for molecule in file_list:
-			molJson = readJson(molecule)
-			#get name of molecule
-			i = 8
-			while molecule[i] != "_":
-				i += 1
-			molName = molecule[8:i] 
-			inputJsons[molName] = molJson
+		prefix = generalizer_settings.constraints_prefix
+		suffix = generalizer_settings.constraints_suffix
+		for dimer in file_list:
+			dimerJson = readJson(dimer)
+			#get name of dimer
+			name = dimer.replace(prefix, '')
+			name = name.replace(suffix, '')
+			dimerName = name 
+			inputJsons[dimerName] = dimerJson
 
 		os.chdir(scriptDir)
 
 	except OSError:
-		print "need to create ab initio constraints directory!"
+		print("need to create abInitioConstraints directory!")
 
 ##################################################################################################################
 # functions for use with imported inital parameters
 # to be used when we already have parameters we want to start minimize() with, do not need to average from library
 ##################################################################################################################
 
-def useInitialParamsFile(molName):
+def useInitialParamsFile(dimerName):
 	"""check to see if .params file already exists, import initial values if so
 
 	Parameters
 	----------
-	molName: name of molecule to find .params file for
+	dimerName: name of dimer to find .params file for
 
 	Returns 
 	-------
 	None, but stores given parameters in initialMinimizeValues
 
 	"""
-	if os.path.isfile(molName + ".params"):
+	if os.path.isfile(dimerName + ".params"):
 		global initialMinimizeValues
-		initialMinimizeValues = MolecularParameters(readJson(molName + ".params"), molName) #need to make this a list to interface with minimize
+		initialMinimizeValues = dimecularParameters(readJson(dimerName + ".params"), dimerName) #need to make this a list to interface with minimize
 
 def minimizeDictionaryToList():
 	"""convert dictionary of imported initial values to list
@@ -390,10 +437,10 @@ def minimizeDictionaryToList():
 	initialValuesList = initialValuesList + output
 
 ######################################################
-#fuctions to use with library of initial parameters
+# fuctions to use when given library of ab initio FF
 ######################################################
 
-def importMolecularParameters():
+def importdimecularParameters():
 	"""import all ab initio parameters
 
 	Parameters
@@ -402,15 +449,15 @@ def importMolecularParameters():
 
 	Returns 
 	-------
-	None, but stores atomtypes of imported molecules in global list of atomtypes
+	None, but stores atomtypes of imported dimers in global list of atomtypes
 
 	"""
 	importParameters()
-	for mol in inputJsons.keys():
-		print "Importing molecular parameters: " + mol
-		molecules[mol] = MolecularParameters(inputJsons[mol], mol)
-		molAtomtypes = molecules[mol].atomtypesList
-		print mol + " parameters successfully imported!"
+	for dim in list(inputJsons.keys()):
+		print(("Importing dimecular parameters: " + dim))
+		dimers[dim] = dimecularParameters(inputJsons[dim], dim)
+		dimAtomtypes = dimers[dim].atomtypesList
+		print((dim + " parameters successfully imported!"))
 
 def averageAvalues():
 	"""return averages of all A values in dictionary
@@ -421,25 +468,25 @@ def averageAvalues():
 
 	Returns 
 	-------
-	Dictionary of average A values for all atomtypes, averaged from all previously imported molecules. Nested dictionary of {atomtype {energy component : value}} 
+	Dictionary of average A values for all atomtypes, averaged from all previously imported dimers. Nested dictionary of {atomtype {energy component : value}} 
 
 	"""
 	allAvalsRaw = {}
 	allAvalsOut = {}
-	for molecule in molecules:
-		currentMolecule = molecules[molecule]
+	for dim in list(dimers.keys()):
+		currentdimer = dimers[dim]
 		for atomtype in allAtomtypes:
 			if atomtype in allAvalsRaw: #if we already have this atomtype, add parameters to existing list
 				for component in energyComponents:
 					try: #try/except allows for multiple atomtypes in different input files
-						allAvalsRaw[atomtype][component].append(currentMolecule[atomtype]["A"][component])
+						allAvalsRaw[atomtype][component].append(currentdimer[atomtype]["A"][component])
 					except KeyError:
 						pass
 			else:
 				componentsDict = {}
 				for component in energyComponents:
 					try:
-						componentsDict[component] = [currentMolecule[atomtype]["A"][component]]
+						componentsDict[component] = [currentdimer[atomtype]["A"][component]]
 						allAvalsRaw[atomtype] = componentsDict
 					except KeyError:
 						pass
@@ -459,22 +506,22 @@ def averageBvalues():
 
 	Returns 
 	-------
-	Dictionary of average B values for all atomtypes, averaged from all previously imported molecules.
+	Dictionary of average B values for all atomtypes, averaged from all previously imported dimers.
 
 	"""
 	allBvalsRaw = {}
 	allBvalsOut = {}
-	for molecule in molecules:
-		currentMolecule = molecules[molecule]
+	for dim in list(dimers.keys()):
+		currentdimer = dimers[dim]
 		for atomtype in allAtomtypes:
 			if atomtype in allBvalsRaw: #if we already have this atomtype, add parameters to existing list
 				try:
-					allBvalsRaw[atomtype].append(currentMolecule[atomtype]["B"])
+					allBvalsRaw[atomtype].append(currentdimer[atomtype]["B"])
 				except KeyError:
 					pass
 			else:
 				try:
-					allBvalsRaw[atomtype] = [currentMolecule[atomtype]["B"]]
+					allBvalsRaw[atomtype] = [currentdimer[atomtype]["B"]]
 				except KeyError:
 					pass
 	for atomtype in allBvalsRaw:
@@ -490,25 +537,25 @@ def averageCvalues():
 
 	Returns 
 	-------
-	Dictionary of average C values for all atomtypes, averaged from all previously imported molecules. Nested dictionary of {atomtype {order : value}} 
+	Dictionary of average C values for all atomtypes, averaged from all previously imported dimers. Nested dictionary of {atomtype {order : value}} 
 
 	"""
 	allCvalsRaw = {}
 	allCvalsOut = {}
-	for molecule in molecules:
-		currentMolecule = molecules[molecule]
+	for dim in list(dimers.keys()):
+		currentdimer = dimers[dim]
 		for atomtype in allAtomtypes:
 			if atomtype in allCvalsRaw: #if we already have this atomtype, add parameters to existing list
 				for term in dispersionTerms:
 					try:
-						allCvalsRaw[atomtype][term].append(currentMolecule[atomtype]["C"][term])
+						allCvalsRaw[atomtype][term].append(currentdimer[atomtype]["C"][term])
 					except KeyError:
 						pass
 			else: #if we have not seen this atomtype yet
 				termsDict = {}
 				for term in dispersionTerms:
 					try:
-						termsDict[term] = [currentMolecule[atomtype]["C"][term]]
+						termsDict[term] = [currentdimer[atomtype]["C"][term]]
 						allCvalsRaw[atomtype] = termsDict
 					except KeyError:
 						pass
@@ -528,20 +575,20 @@ def averageAnisoValues():
 
 	Returns 
 	-------
-	Dictionary of average Aniso values for all atomtypes, averaged from all previously imported molecules. Nested dictionary of {atomtype {energy component {spherical harmonic : value}}} 
+	Dictionary of average Aniso values for all atomtypes, averaged from all previously imported dimers. Nested dictionary of {atomtype {energy component {spherical harmonic : value}}} 
 
 	"""
 	#make dictionaries to store parameters
 	allAnisoValsRaw = {}
 	allAnisoValsOut = {}
 
-	#get parameters for each ab initio molecule
-	for molecule in molecules:
-		currentMolecule = molecules[molecule]
+	#get parameters for each ab initio dimer
+	for dim in list(dimers.keys()):
+		currentdimer = dimers[dim]
 		#for each atomtype, check if already in dictionary
 		for atomtype in allAtomtypes:
 			try:
-				currentAtomtype = currentMolecule[atomtype]
+				currentAtomtype = currentdimer[atomtype]
 				if currentAtomtype.isAniso(): #check if atomtype is anisotropic
 					currentAnisoParams = currentAtomtype["aniso"]
 					currentSphericalHarmonics = currentAtomtype.getSphericalHarmonics()
@@ -648,10 +695,30 @@ def averageParamsDictToList():
 	global initialValuesList
 	initialValuesList = initialValuesList + output
 
-##################################################################################
+def write_global_exponents_file():
+	""" writes initial B params to .exp file so that all dimers get same initial B param values
+
+	Parameters
+	----------
+	none
+
+	Returns
+	-------
+	None
+	"""
+	generalizer_input_directory = generalizer_settings.generalizer_input_directory
+
+	os.chdir(scriptDir + generalizer_input_directory)
+	with open("global_exponents.exp", 'w') as f:
+		for atomtype in allAtomtypes:
+			current_atomtype_B_param = atomtype_B_params[atomtype]
+			f.write(atomtype + '\t' + str(current_atomtype_B_param) + '\n')
+	os.chdir(scriptDir)
+
+##########################################################################################################################
 # metaPOInter and helper functions
-# metaPOInter interfaces with POInter to get lsq_error and dlsq_error for each parameter set
-##################################################################################
+# metaPOInter interfaces with POInter to get lsq_error, dlsq_error, and FF energy for each parameter set for each dimer
+##########################################################################################################################
 
 def map_params(inputList, fileName):
 	"""writes .constraints file in JSON format for metaPOInter from a given input list of parameters
@@ -760,7 +827,8 @@ def make_bounds_list(parameterList, include_B = True):
 	bounds_list: list of bound tuples
 
 	"""
-	i = 0 #keep track of position in parameterList
+	i = 0 #keep track of position in bounds_list
+	#TODO: remove i
 
 	bounds_list = []
 
@@ -782,12 +850,12 @@ def make_bounds_list(parameterList, include_B = True):
 		if atomtype in anisoAtomtypes:
 			sphericalHarmonics = atomtypeSphericalHarmonics[atomtype]
 			for sh in sphericalHarmonics:
-				bounds_list.append((-1e0,1e0))
+				bounds_list.append((-1.0,1.0))
 				i += 1
 
 	return bounds_list
 
-def get_fit_parameters(all_params, fit_molecule):
+def get_fit_parameters(all_params, fit_dimer):
 	"""
 	Fetches the parameters to be fit for a given component.
 
@@ -795,16 +863,16 @@ def get_fit_parameters(all_params, fit_molecule):
 	----------
 
 	all_params: list, parameters for all atomtypes for the given component, in form [atomtype1 A, B, aniso; atomtype2 A, B, aniso...]
-	fit_molecule: string, name of molecule being worked with
+	fit_dimer: string, name of dimer being worked with
 
 	Returns
 	-------
 
-	fit_params: list, params (for the current component) to be input to POInter in format [atomtype1 A, aniso, B; atomtype2 A, aniso, B], only including atomtypes for that molecule
+	fit_params: list, params (for the current component) to be input to POInter in format [atomtype1 A, aniso, B; atomtype2 A, aniso, B], only including atomtypes for that dimer
 
 	"""
 
-	molecule_atomtypes = molecular_atomtypes[fit_molecule]
+	current_dimer_atomtypes = dimer_atomtypes[fit_dimer]
 
 	fit_params = []
 
@@ -820,11 +888,11 @@ def get_fit_parameters(all_params, fit_molecule):
 		if pot_atomtype in anisoAtomtypes:
 			n_spherical_harmonics = len(atomtypeSphericalHarmonics[pot_atomtype])
 			n_params += n_spherical_harmonics
-		if fitting_component == 0:
+		if fitting_component == 0 and generalizer_settings.fit_b:
 			n_params += 1 #if we are including the B param (exchange)
 
-		#if our molecule has this atomtype, add these parameters to the output list	
-		if pot_atomtype in molecule_atomtypes:
+		#if our dimer has this atomtype, add these parameters to the output list	
+		if pot_atomtype in current_dimer_atomtypes:
 			atomtype_params = all_params[input_placeholder : input_placeholder + n_params]
 			for param in atomtype_params:
 				fit_params.append(param)
@@ -875,7 +943,7 @@ def get_component_parameters(all_params):
 	input_index = 0
 	output_params = []
 	global fitting_component
-	print all_params
+	print(all_params)
 
 	for atomtype in allAtomtypes:
 		n_params = atomtype_nparams[atomtype] - 4 #subtract out C params
@@ -885,13 +953,15 @@ def get_component_parameters(all_params):
 		#get aniso params
 		if atomtype in anisoAtomtypes:
 			init_input_index = input_index
-			n_spherical_harmonics = atomtypeSphericalHarmonics[atomtype]
+			n_spherical_harmonics = len(atomtypeSphericalHarmonics[atomtype])
 			for i in range(fitting_component):
 				input_index += n_spherical_harmonics
-			output_params.append(all_params[input_index : input_index + n_spherical_harmonics])
+			aniso_params = all_params[input_index + 1 : input_index + 1 + n_spherical_harmonics]
+			for aaniso in aniso_params:
+				output_params.append(aaniso)
 			input_index = init_input_index
 		#get B if required (exchange)
-		if fitting_component == 0:
+		if fitting_component == 0 and generalizer_settings.fit_b:
 			output_params.append(1.0)
 
 		#move index counter to start of next atomtype
@@ -900,14 +970,14 @@ def get_component_parameters(all_params):
 
 	return output_params
 
-def add_dlsq_error(all_dlsq_error, new_dlsq_error, moleculeName):
+def add_dlsq_error(all_dlsq_error, new_dlsq_error, dimerName):
 	""" add dlsq_error returned by POInter to list of all dlsq_error
 
 	parameters
 	----------
 	all_dlsq_error: list, all dlsq_error for all atomtypes and parameters in format corresponding to [atomtype1 A, aniso, B; atomtype2 A, aniso, B]
-	new_dlsq_error: list, dlsq_error returned from POInter to be added to all_dlsq_error (in same format at all_dlsq_error, just without some atomtypes not found in that molecule)
-	moleculeName: name of molecule
+	new_dlsq_error: list, dlsq_error returned from POInter to be added to all_dlsq_error (in same format at all_dlsq_error, just without some atomtypes not found in that dimer)
+	dimerName: name of dimer
 
 	returns
 	-------
@@ -915,7 +985,7 @@ def add_dlsq_error(all_dlsq_error, new_dlsq_error, moleculeName):
 	"""
 
 	global fitting_component
-	mol_atomtypes = molecular_atomtypes[moleculeName]
+	dim_atomtypes = dimer_atomtypes[dimerName]
 	all_dlsq_error_index = 0
 
 	#add new dlsq_error to all_dlsq_error
@@ -925,8 +995,8 @@ def add_dlsq_error(all_dlsq_error, new_dlsq_error, moleculeName):
 		n_params = atomtype_nparams[pot_atomtype] - 4 # excluding C params which are not fit
 		if fitting_component != 0:
 			n_params -= 1 # subtract B param if not fitting exchange
-		n_params = n_params / 5 # to find numer of parameters for a single component energy
-		if pot_atomtype in mol_atomtypes:
+		n_params = int(n_params / 5) # to find numer of parameters for a single component energy
+		if pot_atomtype in dim_atomtypes:
 			for i in range(n_params):
 				all_dlsq_error[all_dlsq_error_index + i] += new_dlsq_error[new_dlsq_error_index + i]
 			new_dlsq_error_index += n_params
@@ -953,18 +1023,27 @@ def write_output_params_to_list(parameterDict):
 	for atomtype in allAtomtypes:
 		
 		if atomtype in anisoAtomtypes:
-			n_spherical_harmonics = atomtypeSphericalHarmonics[atomtype]
+			n_spherical_harmonics = len(atomtypeSphericalHarmonics[atomtype])
 		else:
 			n_spherical_harmonics = 0
 
 		shift = 1 + n_spherical_harmonics
 		#get A params	
 		for component in energyComponents:
-			if component == "Exchange":
+			if component == "Exchange" and generalizer_settings.fit_b:
 				b_scale = parameterDict[component][input_atomtype_i + n_spherical_harmonics + exchange_shift]
 				exchange_shift += 1
-			a_param = parameterDict[component][input_atomtype_i]
-			outputList.append(a_param)
+			else:
+				b_scale = 1.0
+			try:
+				a_param = parameterDict[component][input_atomtype_i]
+				outputList.append(a_param)
+			except IndexError:
+				if component == "Dispersion": #add dispersion params for anisotropic atomtypes
+					a_param = [1.0 for sh in range(n_spherical_harmonics)]
+					outputList += a_param
+				else:
+					raise IndexError
 		#get B param
 		b_init_param = atomtype_B_params[atomtype]
 		new_b_param = b_init_param * b_scale
@@ -996,7 +1075,7 @@ def get_updated_B_from_exchange(exchange_params):
 
 	for atomtype in allAtomtypes:
 		if atomtype in anisoAtomtypes:
-			n_spherical_harmonics = atomtypeSphericalHarmonics[atomtype]
+			n_spherical_harmonics = len(atomtypeSphericalHarmonics[atomtype])
 		else:
 			n_spherical_harmonics = 0
 
@@ -1021,7 +1100,7 @@ def calc_disp_lsq_error():
 
 	returns
 	-------
-	total_lsq_error: float, sum of all lsq_error for each individual molecular dispersion component
+	total_lsq_error: float, sum of all lsq_error for each individual dimecular dispersion component
 	"""
 	#set fitting component for dispersion
 	global fitting_component
@@ -1029,9 +1108,9 @@ def calc_disp_lsq_error():
 
 	total_lsq_error = 0.0
 
-	for molecule in molecules.keys():
+	for dim in list(dimers.keys()):
 		#get POInter object and setting fitting_component
-		pointerModel = molecule_POInter_objects[molecule]
+		pointerModel = dimer_POInter_objects[dim]
 		pointerModel.component = fitting_component
 		#get qm energies
 		pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
@@ -1041,18 +1120,39 @@ def calc_disp_lsq_error():
 		n_aiso = pointerModel.n_isotropic_params if not pointerModel.fit_bii else pointerModel.n_isotropic_params - 1
 		n_aaniso = n_aiso
 		#calc lsq_error, dlsq_error
-		molecule_atomtypes = molecular_atomtypes[molecule]
-		currentParams = tuple(1.0 for atomtype in molecule_atomtypes)
-		print "Fitting component", fitting_component, "with current parameters", currentParams
+		current_dimer_atomtypes = dimer_atomtypes[dim]
+		currentParams = tuple(1.0 for atomtype in current_dimer_atomtypes)
+		print(("Getting lsq_error for component", fitting_component, "with current parameters", currentParams))
 		pointerModel.get_num_eij = pointerModel.generate_num_eij(currentParams)
 		pointerOutput = pointerModel.calc_leastsq_ff_fit(currentParams)
 		total_lsq_error += pointerOutput[0]
 
 	return total_lsq_error
 
+def make_output_directories():
+	"""make directories to store output files from parameter generalizer_settings
+
+	Parameters
+	----------
+	None
+
+	Returns
+	-------
+	None
+	"""
+	global scriptDir
+	output_directory = generalizer_settings.output_directory
+	if not os.path.isdir(scriptDir + output_directory):
+		os.mkdir(scriptDir + output_directory)
+	os.chdir(scriptDir + output_directory)
+	for dim in list(dimers.keys()):
+		if not os.path.isdir(scriptDir + output_directory + dim):
+			os.mkdir(scriptDir + output_directory + dim)
+	os.chdir(scriptDir)
+
 def metaPOInter(parameterList):
 	"""
-	Interface function with POInter code. Called by minimize(), will get lsq_error and dlsq_error for each molecule in library, returns total lsq_error and total dlsq_error
+	Interface function with POInter code. Called by minimize(), will get lsq_error and dlsq_error for each dimer in library, returns total lsq_error and total dlsq_error
 
 	Parameters
 	----------
@@ -1062,7 +1162,7 @@ def metaPOInter(parameterList):
 	Returns
 	-------
 
-	total_lsq_error: float, sum lsq_error for entire library of molecules
+	total_lsq_error: float, sum lsq_error for entire library of dimers
 
 	dlsq_error: list, list of total dlsq_error's for each parameter being optimized
 
@@ -1072,16 +1172,21 @@ def metaPOInter(parameterList):
 	dlsq_error = [0.0 for i in range(len(parameterList))]
 	global fitting_component
 
-	#get lsq_error and dlsq_error for each molecule from POInter, add to running totals
-	os.chdir(scriptDir + "/abInitioSAPT")
-	for molecule in molecules.keys():
-		if molecule not in molecule_POInter_objects:
-			saptFile = molecule + "_" + molecule + ".sapt"
+	#get lsq_error and dlsq_error for each dimer from POInter, add to running totals
+	generalizer_input_directory = generalizer_settings.generalizer_input_directory
+	os.chdir(scriptDir + generalizer_input_directory)
+	for dim in list(dimers.keys()):
+		print(("Calculating for " + str(dim)))
+		if dim not in dimer_POInter_objects:
+			saptFile = dim + ".sapt"
 			#make POInter object
 			pointerModel = Pointer.FitFFParameters(fit = False, energy_file = saptFile)
+			pointerModel.inputdir = os.getcwd()
 
 			#call required POInter start-up functions
-			kwargs = {"mon1": molecule, "mon2": molecule}
+			exp_file = generalizer_settings.exponent_file
+			monomers = dim.split('_')
+			kwargs = {"mon1": monomers[0], "mon2": monomers[1], "exponent_files" : exp_file}
 			pointerModel.read_settings(['default'], kwargs)
 			pointerModel.read_energies()
 			pointerModel.read_params()
@@ -1095,27 +1200,27 @@ def metaPOInter(parameterList):
 			pointerModel.fit_isotropic_atomtypes.sort()
 			pointerModel.fit_anisotropic_atomtypes.sort()
 			#store POInter object for later use by subsequent calls to metaPOInter
-			molecule_POInter_objects[molecule] = pointerModel
-			#set molecule drude flag to false
-			drude_flags[molecule] = False
+			dimer_POInter_objects[dim] = pointerModel
+			#set dimer drude flag to false
+			drude_flags[dim] = False
 		else:
-			pointerModel = molecule_POInter_objects[molecule]
+			pointerModel = dimer_POInter_objects[dim]
 			pointerModel.component = fitting_component
 
 		#get drude energy if component 1
-		if fitting_component == 1 and not drude_flags[molecule]:
+		if fitting_component == 1 and not drude_flags[dim]:
 			pointerModel.get_drude_oscillator_energy()
-			drude_flags[molecule] = True
+			drude_flags[dim] = True
 		#subtract hard constraints energy from energy to be fit
-		mol_qm_dict = qm_energies[molecule]
-		if fitting_component not in mol_qm_dict:
+		dim_qm_dict = qm_energies[dim]
+		if fitting_component not in dim_qm_dict:
 			pointerModel.qm_fit_energy = np.array(pointerModel.subtract_hard_constraint_energy())
-			qm_energies[molecule][fitting_component] = pointerModel.qm_fit_energy
+			qm_energies[dim][fitting_component] = pointerModel.qm_fit_energy
 		else:
-			pointerModel.qm_fit_energy = qm_energies[molecule][fitting_component]
+			pointerModel.qm_fit_energy = qm_energies[dim][fitting_component]
 
 		#set fitting component and B coeff fitting (if exchange component)
-		if fitting_component == 0:
+		if fitting_component == 0 and generalizer_settings.fit_b:
 			pointerModel.fit_bii = True
 			pointerModel.n_isotropic_params = 2
 
@@ -1124,7 +1229,7 @@ def metaPOInter(parameterList):
 			i_bparams = []
 
 			param_i = 0
-			for atomtype in molecular_atomtypes[molecule]:
+			for atomtype in dimer_atomtypes[dim]:
 				if atomtype in anisoAtomtypes:
 					num_aniso = len(atomtypeSphericalHarmonics[atomtype])
 				else:
@@ -1143,21 +1248,22 @@ def metaPOInter(parameterList):
 			n_aaniso = n_aiso
 
 		#calc lsq_error, dlsq_error
-		currentParams = tuple(get_fit_parameters(parameterList, molecule))
-		print "Fitting component", fitting_component, "with current parameters", currentParams
+		currentParams = tuple(get_fit_parameters(parameterList, dim))
+		print(("Fitting component", fitting_component, "with current parameters", currentParams))
 		pointerModel.get_num_eij = pointerModel.generate_num_eij(currentParams)
 		pointerOutput = pointerModel.calc_leastsq_ff_fit(currentParams)
 
-		print
-		print "leastsq error: ", pointerOutput[0]
-		print
+
+		print()
+		print(("leastsq error: ", pointerOutput[0]))
+		print()
 
 		#add lsq_error, dlsq_error to totals
 
 		total_lsq_error += pointerOutput[0]
 		dlsq_error_components = pointerOutput[1]
 
-		dlsq_error = add_dlsq_error(dlsq_error, dlsq_error_components, molecule)	
+		dlsq_error = add_dlsq_error(dlsq_error, dlsq_error_components, dim)	
 
 	os.chdir(scriptDir)
 
@@ -1179,9 +1285,9 @@ def optimzeGeneralParameters():
 	-------
 	Global lsq_error for library
 	"""
-	#initialize qm energies dictionaries for each molecule
+	#initialize qm energies dictionaries for each dimer
 	global qm_energies
-	qm_energies = {mol : {} for mol in molecules}
+	qm_energies = {dim : {} for dim in list(dimers.keys())}
 
 	#set parameters for minimize function
 	maxiter = 5000
@@ -1199,7 +1305,7 @@ def optimzeGeneralParameters():
 	while fitting_component < 4:
 
 		#make list of bounds for component to pass down to POInter. Only include B bound if fitting exchange
-		if fitting_component == 0:
+		if fitting_component == 0 and generalizer_settings.fit_b:
 			bnds = all_bnds
 		else:
 			bnds = a_bnds
@@ -1207,9 +1313,10 @@ def optimzeGeneralParameters():
 		#make list of parameters for component to pass down to POInter
 		#get only parameters for the component we are fitting
 
-		#TODO: make so user can choose whether or not to fit B params
-		#TODO: make sure input B params are the same for every molecule
-			#TODO: use same .exp file ()
+		#make sure all dimers get right exponent file
+		#TODO: make sure this line is in the right place
+		write_global_exponents_file()
+
 		metaPOInter_input = get_component_parameters(metaPOInter_initial_list)
 
 		res = minimize(metaPOInter,metaPOInter_input,method='L-BFGS-B',\
@@ -1218,26 +1325,59 @@ def optimzeGeneralParameters():
 							bounds = bnds)
 
 		popt = res.x
-		print "Optimized parameters for component " + str(fitting_component) + " : " + str(popt)
+		success = res.success
+		message = res.message
+		print(("Optimized parameters for component " + str(fitting_component) + " : " + str(popt)))
 
 		if not res.success:
-			print 'Warning! Optimizer did not terminate successfully, and quit with the following error message:'
-			print
-			print res.message
-			print
+			print('Warning! Optimizer did not terminate successfully, and quit with the following error message:')
+			print()
+			print((res.message))
+			print()
 			return
 
 		global optimized_params
 		optimized_params[energyComponents[fitting_component]] = popt
 
-		#reset new B params in POInter objects after fitting exchange component
+		#initialize ff energy dictionary
 		if fitting_component == 0:
+			global ff_energies
+			ff_energies = {dim : np.zeros_like(dimer_POInter_objects[dim].qm_energy[6]) for dim in list(dimers.keys())}
+
+		#calculate ff energy for each dimer and write output files
+		for dim in list(dimers.keys()):
+			pointerModel = dimer_POInter_objects[dim]
+			pointerModel.component = fitting_component
+			pointerModel.get_num_eij = pointerModel.generate_num_eij(popt)
+			pointerModel.output_params(popt)
+			ff_fit_energy = pointerModel.calc_ff_energy(popt)[0]
+			ff_energy = np.array(pointerModel.qm_energy[fitting_component]) - np.array(qm_energies[dim][fitting_component]) + ff_fit_energy #adding back in hard constraint energy
+			pointerModel.rms_error = pointerModel.calc_rmse(ff_energy)
+			pointerModel.weighted_absolute_error = pointerModel.calc_mse(ff_energy, cutoff=pointerModel.weighted_rmse_cutoff)
+			pointerModel.weighted_rms_error = pointerModel.calc_rmse(ff_energy, cutoff=pointerModel.weighted_rmse_cutoff)
+			pointerModel.lsq_error = pointerModel.calc_leastsq_ff_fit(popt)[0]
+			#write output files
+			print(("writing output for component " + str(fitting_component) + " for " + dim))
+			global scriptDir
+			os.chdir(scriptDir + "/dim_fits/" + dim)
+			pointerModel.write_output_file(success,message)
+			pointerModel.write_energy_file(ff_energy)
+
+			total_ff_energy = ff_energies[dim]
+			total_ff_energy += ff_energy
+
+			os.chdir(scriptDir)
+
+		#reset new B params in POInter objects after fitting exchange component
+		if fitting_component == 0 and generalizer_settings.fit_b:
 			updated_B_params = get_updated_B_from_exchange(popt)
-			for mol in molecules.keys():
+			for dim in list(dimers.keys()):
 				i = 0
 				for atomtype in allAtomtypes:
-					pointerModel = molecule_POInter_objects[mol]
-					pointerModel.params[atomtype][0]['B'] = updated_B_params[i]
+					try:
+						pointerModel.params[atomtype][0]['B'] = updated_B_params[i]
+					except KeyError: #catch if atomtype not in current dimer
+						pass
 					i += 1
 		
 		fitting_component += 1
@@ -1246,6 +1386,38 @@ def optimzeGeneralParameters():
 	optimized_params["Dispersion"] = [1.0 for atomtype in allAtomtypes]
 	final_params_list = write_output_params_to_list(optimized_params)
 	map_params(final_params_list, "optimized_params")
+
+	#calc dispersion energy and total energy
+	for dim in list(dimers.keys()):
+		os.chdir(scriptDir + "/dim_fits/" + dim)
+		#dispersion
+		fitting_component = 4
+		pointerModel = dimer_POInter_objects[dim]
+		pointerModel.component = fitting_component
+		if not scale_iso_disp:
+			pointerModel.default_n_isotropic_params -= 1
+			ff_energy = pointerModel.fit_component_parameters()
+			pointerModel.write_energy_file(ff_energy)
+			print((dim + " energy file for component " + str(fitting_component) + " successfully written"))
+			total_ff_energy = ff_energies[dim]
+			total_ff_energy += ff_energy
+		else:
+			raise NotImplementedError
+
+		#total energy
+		pointerModel.component = 6
+		ff_energy = ff_energies[dim]
+		qm_energy = pointerModel.qm_energy[pointerModel.component]
+		weight = Pointer.functional_forms.weight(qm_energy, pointerModel.eff_mu, pointerModel.eff_kt)
+		pointerModel.lsq_error =  np.sum(weight*(ff_energy - qm_energy)**2)
+		pointerModel.write_energy_file(ff_energy)
+		pointerModel.rms_error = pointerModel.calc_rmse(ff_energy)
+		pointerModel.weighted_rms_error = pointerModel.calc_rmse(ff_energy, cutoff=pointerModel.weighted_rmse_cutoff)
+		pointerModel.weighted_absolute_error = pointerModel.calc_mse(ff_energy, cutoff=pointerModel.weighted_rmse_cutoff)
+		pointerModel.write_output_file()
+		print(("Total energy file for " + dim + " successfully written"))
+
+		os.chdir(scriptDir)
 
 	#calc dispersion lsq_error and store
 	disp_lsq_error = calc_disp_lsq_error()
@@ -1257,34 +1429,37 @@ def optimzeGeneralParameters():
 			f.write(component + ":" + '\t')
 			f.write(str(component_lsq_error[component]) + '\n')
 
-	print "==========================================================================="
-	print " Optimized parameters successfully written to optimized_params.constraints "
-	print "==========================================================================="
+	print("===========================================================================")
+	print(" Optimized parameters successfully written to optimized_params.constraints ")
+	print("===========================================================================")
 
 	return res
 
 def main():
 	try:
 		useInitialParamsFile(sys.argv[1])
-		print "Importing given parameters"
-		print "Converting given initial parameter dictionary to list"
+		print("Importing given parameters")
+		print("Converting given initial parameter dictionary to list")
 
 		allAtomtypes.sort() #alphabetize atomtypes list
 		minimizeDictionaryToList()
-		print "Initial parameter list successfully created"
-		#TODO: get names of all molecules in library
+		print("Initial parameter list successfully created")
+		#TODO: get names of all dimers in library
 		#TODO: perform opt.
 
 	except IndexError:
-		print "Importing all molecular parameters from library"
-		importMolecularParameters()
-		print "Calculating average parameter values"
+		print("Importing all dimer parameters from library")
+		importdimecularParameters()
+		print("Calculating average parameter values")
 		getInitalAverageParameters()
 
-		allAtomtypes.sort() #alphabetize atomtypes list
-		print "Converting initial parameter dictionary to list"
+		allAtomtypes.sort() #alphabetize atomtypes list so everything iterizes over it the same way
+		print("Converting initial parameter dictionary to list") #must be list for minimize function
 		averageParamsDictToList()
-		print "Initial parameter list successfully created"
+		print("Initial parameter list successfully created")
+		print("Making output directories")
+		make_output_directories()
+		print("Beginning parameter generalization")
 		optimzeGeneralParameters()
 
 main()

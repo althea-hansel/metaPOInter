@@ -1,7 +1,0 @@
-#C  y10 y20 #c3v
-#H  y10 y20 #cinfv
-
-Axes
-ATOM#   AXIS (z or x)   Atomic Indices defining vector (either 2 or more integers)
-#0 z 0 1
-#0 x 0 2

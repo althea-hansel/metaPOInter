@@ -1,0 +1,100 @@
+{
+    "H": {
+        "params_order": [
+            "Exchange", 
+            "Electrostatics", 
+            "Induction", 
+            "Dhf", 
+            "Dispersion"
+        ], 
+        "A": [
+            0.6607805488243593, 
+            0.31703415199046053, 
+            0.12403007878472429, 
+            0.213884042094605, 
+            1.0
+        ], 
+        "aniso": [
+            [], 
+            [], 
+            [], 
+            [], 
+            []
+        ], 
+        "B": 2.2212453, 
+        "C": [
+            1.4983894687296757, 
+            6.488268258942443, 
+            33.240607726093096, 
+            0.0
+        ], 
+        "drude_charge": -0.587568966478328, 
+        "springcon": 0.1, 
+        "thole": 0.36, 
+        "thole_type": "thole_tinker", 
+        "sph_harm": [], 
+        "comments": [
+            "Parameters for the H atom in the molecule butane, obtained from fitting the butane - butane dimer.", 
+            "Z-axis not defined", 
+            "X-axis not defined"
+        ]
+    }, 
+    "CA": {
+        "params_order": [
+            "Exchange", 
+            "Electrostatics", 
+            "Induction", 
+            "Dhf", 
+            "Dispersion"
+        ], 
+        "A": [
+            1.7358027155638973, 
+            1.2945360795751253, 
+            0.046606252833899645, 
+            0.06823972805105429, 
+            1.0
+        ], 
+        "aniso": [
+            [
+                0.1574366975495735, 
+                -0.2348761406400036
+            ], 
+            [
+                0.09014208965866995, 
+                -0.17341923584479815
+            ], 
+            [
+                -0.32009441538895195, 
+                0.1255785385880088
+            ], 
+            [
+                0.33482879749504535, 
+                -0.3159358845938879
+            ], 
+            [
+                0.10834274801173494, 
+                -0.021675438854359293
+            ]
+        ], 
+        "B": 2.00296829, 
+        "C": [
+            4.847095831526338, 
+            18.798287953960063, 
+            63.2565191818203, 
+            202.85985554318037
+        ], 
+        "drude_charge": -0.774024183257736, 
+        "springcon": 0.1, 
+        "thole": 0.36, 
+        "thole_type": "thole_tinker", 
+        "sph_harm": [
+            "y10", 
+            "y20"
+        ], 
+        "comments": [
+            "Parameters for the CA atom in the molecule butane, obtained from fitting the butane - butane dimer.", 
+            "Z-axis defined as the vector from atom CA to atom H in molecule butane", 
+            "X-axis defined as the vector from atom CA to atom H in molecule butane"
+        ]
+    }
+}

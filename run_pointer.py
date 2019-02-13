@@ -2,8 +2,8 @@
 from pointer import FitFFParameters as Fit
 
 settings = {}
-settings['mon1'] = 'ethane'
-settings['mon2'] = 'ethane'
+settings['mon1'] = 'butane'
+settings['mon2'] = 'butane'
 settings['ofile_prefix'] = 'output/fit_exp_'
 settings['ofile_suffix'] = '_unconstrained'
 settings['fit_bii'] = False
