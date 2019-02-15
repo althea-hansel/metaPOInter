@@ -3479,3 +3479,81 @@ Exchange Weighted RMS Error: 3.31471e-04
 Exchange Weighted Mean Signed Error: 3.45959e-05
 Exchange Weighted Least-Squares Error: 8.02540e-05
 --------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C(0)         1.328336
+               A        
+H(0)         0.312647
+Constrained Atomtypes 
+  None
+------------
+Electrostatics RMS Error: 1.74115e-04
+Electrostatics Weighted RMS Error: 1.03076e-04
+Electrostatics Weighted Mean Signed Error: 4.27572e-06
+Electrostatics Weighted Least-Squares Error: 1.77420e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.129467
+Constrained Atomtypes 
+  None
+------------
+Induction RMS Error: 3.35368e-05
+Induction Weighted RMS Error: 2.11860e-05
+Induction Weighted Mean Signed Error: 1.03233e-05
+Induction Weighted Least-Squares Error: 5.65829e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C(0)         0.069560
+               A        
+H(0)         0.213919
+Constrained Atomtypes 
+  None
+------------
+Dhf RMS Error: 2.47507e-05
+Dhf Weighted RMS Error: 1.55171e-05
+Dhf Weighted Mean Signed Error: 9.89847e-06
+Dhf Weighted Least-Squares Error: 3.13514e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+Constrained Atomtypes 
+  None
+------------
+Dispersion RMS Error: 1.84176e-04
+Dispersion Weighted RMS Error: 1.35667e-04
+Dispersion Weighted Mean Signed Error: -9.96835e-05
+Dispersion Weighted Least-Squares Error: 1.99689e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 3.68572e-04
+Total Energy Weighted RMS Error: 2.01604e-04
+Total Energy Weighted Mean Signed Error: -4.05900e-05
+Total Energy Weighted Least-Squares Error: 6.28611e-05
+--------------------------------------------
+#########################################################################
+
+
