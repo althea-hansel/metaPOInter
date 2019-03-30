@@ -1359,7 +1359,7 @@ def optimzeGeneralParameters():
 			#write output files
 			print(("writing output for component " + str(fitting_component) + " for " + dim))
 			global scriptDir
-			os.chdir(scriptDir + "/dim_fits/" + dim)
+			os.chdir(scriptDir + generalizer_settings.output_directory + dim)
 			pointerModel.write_output_file(success,message)
 			pointerModel.write_energy_file(ff_energy)
 
@@ -1389,7 +1389,7 @@ def optimzeGeneralParameters():
 
 	#calc dispersion energy and total energy
 	for dim in list(dimers.keys()):
-		os.chdir(scriptDir + "/dim_fits/" + dim)
+		os.chdir(scriptDir + generalizer_settings.output_directory + dim)
 		#dispersion
 		fitting_component = 4
 		pointerModel = dimer_POInter_objects[dim]

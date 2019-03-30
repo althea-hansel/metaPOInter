@@ -1,0 +1,82 @@
+{
+    "C": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            2.217578097140622,
+            1.7591499416303715,
+            0.0,
+            0.12765901234703678,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.0786822487902663,
+        "C": [
+            4.847095831526338,
+            18.798287953960063,
+            63.2565191818203,
+            202.85985554318037
+        ],
+        "drude_charge": -0.774024183257736,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the C atom in the molecule ethane, obtained from fitting the ethane - ethane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    },
+    "H": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            0.9756604724978883,
+            0.29491238818267695,
+            0.13154649302998123,
+            0.21391429784211047,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.237826445179953,
+        "C": [
+            1.4983894687296757,
+            6.488268258942443,
+            33.240607726093096,
+            0.0
+        ],
+        "drude_charge": -0.587568966478328,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the H atom in the molecule ethane, obtained from fitting the ethane - ethane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    }
+}

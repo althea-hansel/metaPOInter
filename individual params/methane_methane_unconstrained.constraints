@@ -1,0 +1,82 @@
+{
+    "C": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            2.937119588812566,
+            1.6854100534358554,
+            0.0,
+            0.2727906993126321,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 1.99620516,
+        "C": [
+            4.847095831526338,
+            18.798287953960063,
+            63.2565191818203,
+            202.85985554318037
+        ],
+        "drude_charge": -0.774024183257736,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the C atom in the molecule methane, obtained from fitting the methane - methane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    },
+    "H": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            1.1542295601604853,
+            0.5411204486863008,
+            0.26617333205931826,
+            0.3856352944902558,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.67879909,
+        "C": [
+            1.4983894687296757,
+            6.488268258942443,
+            33.240607726093096,
+            0.0
+        ],
+        "drude_charge": -0.587568966478328,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the H atom in the molecule methane, obtained from fitting the methane - methane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    }
+}

@@ -1,0 +1,82 @@
+{
+    "C": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            2.7061755927307773,
+            1.658147184635884,
+            0.0,
+            0.21222355801683415,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.0239545899999998,
+        "C": [
+            4.847095831526338,
+            18.798287953960063,
+            63.2565191818203,
+            202.85985554318037
+        ],
+        "drude_charge": -0.774024183257736,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the C atom in the molecule ethane, obtained from fitting the ethane - ethane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    },
+    "H": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            1.0756433210130738,
+            0.5196352388323512,
+            0.2351093245600425,
+            0.3600165013768486,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.59809883,
+        "C": [
+            1.4983894687296757,
+            6.488268258942443,
+            33.240607726093096,
+            0.0
+        ],
+        "drude_charge": -0.587568966478328,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the H atom in the molecule ethane, obtained from fitting the ethane - ethane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    }
+}

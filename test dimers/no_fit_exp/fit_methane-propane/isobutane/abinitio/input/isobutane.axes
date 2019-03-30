@@ -1,0 +1,5 @@
+#C  
+#H  
+
+Axes
+ATOM#   AXIS (z or x)   Atomic Indices defining vector (either 2 or more integers)

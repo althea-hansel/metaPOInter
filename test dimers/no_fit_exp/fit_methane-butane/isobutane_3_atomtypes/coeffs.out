@@ -1,0 +1,1154 @@
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+C(0)       2.014091
+H(0)       2.408877
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+H(0)       2.408877
+C3(0)      2.132932
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C(0)       2.014091
+H(0)       2.408877
+C3(0)      2.132932
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95062e-05
+Induction Weighted RMS Error: 1.67789e-05
+Induction Weighted Mean Signed Error: 4.93565e-06
+Induction Weighted Least-Squares Error: 4.38580e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.19016e-05
+Dhf Weighted RMS Error: 2.56253e-05
+Dhf Weighted Mean Signed Error: -1.79519e-05
+Dhf Weighted Least-Squares Error: 9.01364e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53120e-04
+Total Energy Weighted RMS Error: 4.67295e-04
+Total Energy Weighted Mean Signed Error: 3.47578e-04
+Total Energy Weighted Least-Squares Error: 2.60458e-04
+--------------------------------------------
+#########################################################################
+
+
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C(0)       2.014091
+C3(0)      2.132932
+H(0)       2.408877
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95075e-05
+Induction Weighted RMS Error: 1.67778e-05
+Induction Weighted Mean Signed Error: 4.93536e-06
+Induction Weighted Least-Squares Error: 4.38622e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.18996e-05
+Dhf Weighted RMS Error: 2.56258e-05
+Dhf Weighted Mean Signed Error: -1.79511e-05
+Dhf Weighted Least-Squares Error: 9.01277e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53119e-04
+Total Energy Weighted RMS Error: 4.67294e-04
+Total Energy Weighted Mean Signed Error: 3.47578e-04
+Total Energy Weighted Least-Squares Error: 2.60458e-04
+--------------------------------------------
+#########################################################################
+
+
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+H(0)       2.408877
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95050e-05
+Induction Weighted RMS Error: 1.67789e-05
+Induction Weighted Mean Signed Error: 4.93532e-06
+Induction Weighted Least-Squares Error: 4.38545e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.18982e-05
+Dhf Weighted RMS Error: 2.56258e-05
+Dhf Weighted Mean Signed Error: -1.79526e-05
+Dhf Weighted Least-Squares Error: 9.01219e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53121e-04
+Total Energy Weighted RMS Error: 4.67294e-04
+Total Energy Weighted Mean Signed Error: 3.47577e-04
+Total Energy Weighted Least-Squares Error: 2.60459e-04
+--------------------------------------------
+#########################################################################
+
+
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+H(0)       2.408877
+C3(0)      2.132932
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95074e-05
+Induction Weighted RMS Error: 1.67787e-05
+Induction Weighted Mean Signed Error: 4.93532e-06
+Induction Weighted Least-Squares Error: 4.38616e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.18989e-05
+Dhf Weighted RMS Error: 2.56246e-05
+Dhf Weighted Mean Signed Error: -1.79519e-05
+Dhf Weighted Least-Squares Error: 9.01248e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53122e-04
+Total Energy Weighted RMS Error: 4.67295e-04
+Total Energy Weighted Mean Signed Error: 3.47577e-04
+Total Energy Weighted Least-Squares Error: 2.60459e-04
+--------------------------------------------
+#########################################################################
+
+
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+C(0)       2.014091
+H(0)       2.408877
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95058e-05
+Induction Weighted RMS Error: 1.67789e-05
+Induction Weighted Mean Signed Error: 4.93566e-06
+Induction Weighted Least-Squares Error: 4.38568e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.19007e-05
+Dhf Weighted RMS Error: 2.56245e-05
+Dhf Weighted Mean Signed Error: -1.79511e-05
+Dhf Weighted Least-Squares Error: 9.01327e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53118e-04
+Total Energy Weighted RMS Error: 4.67295e-04
+Total Energy Weighted Mean Signed Error: 3.47578e-04
+Total Energy Weighted Least-Squares Error: 2.60457e-04
+--------------------------------------------
+#########################################################################
+
+
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+H(0)       2.408877
+C3(0)      2.132932
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+C(0)       2.014091
+H(0)       2.408877
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95065e-05
+Induction Weighted RMS Error: 1.67786e-05
+Induction Weighted Mean Signed Error: 4.93441e-06
+Induction Weighted Least-Squares Error: 4.38591e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.19034e-05
+Dhf Weighted RMS Error: 2.56276e-05
+Dhf Weighted Mean Signed Error: -1.79547e-05
+Dhf Weighted Least-Squares Error: 9.01442e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53118e-04
+Total Energy Weighted RMS Error: 4.67291e-04
+Total Energy Weighted Mean Signed Error: 3.47574e-04
+Total Energy Weighted Least-Squares Error: 2.60457e-04
+--------------------------------------------
+#########################################################################
+
+
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+H(0)       2.408877
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+H(0)       2.408877
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+########################## FF Fitting Summary ###########################
+--------------------------------------------
+Program Version: 2.0.0
+Short-range Functional Form: slater
+Combination Rules: aij = geometric
+                   bij = geometric_mean
+                   cij = geometric
+Electrostatic Damping Type: None
+Thole         Damping Type: thole_tinker
+Thole Param: 0.36
+Fitting weight: eff_mu = 0.0 Ha
+                eff_kt = 0.01433688 Ha
+Weighted RMSE cutoff: 0.0 Ha
+Anisotropic Atomtypes: None
+------------
+Exponents:
+C3(0)      2.132932
+H(0)       2.408877
+C(0)       2.014091
+------------
+Monomer 1 Multipole File:
+input/isobutane_ISA_L2.mom
+Monomer 2 Multipole File:
+input/isobutane_ISA_L2.mom
+--------------------------------------------
+Exchange Parameters:
+    Functional Form = 
+	E(exch)_ij = A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+    where the a coefficient for each spherical harmonic term Y_ml
+    is listed in the parameters below.
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         2.159980
+               A        
+H(0)         0.848702
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Exchange RMS Error: 8.85646e-04
+Exchange Weighted RMS Error: 5.84678e-04
+Exchange Weighted Mean Signed Error: 4.50443e-04
+Exchange Weighted Least-Squares Error: 2.10647e-04
+--------------------------------------------
+Electrostatic Parameters:
+    Functional Form = 
+	E(elst)_ij = f_damp*qi*qj/rij - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.488979
+               A        
+H(0)         0.401075
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Electrostatics RMS Error: 2.60824e-04
+Electrostatics Weighted RMS Error: 1.57461e-04
+Electrostatics Weighted Mean Signed Error: -1.24829e-04
+Electrostatics Weighted Least-Squares Error: 3.97381e-05
+--------------------------------------------
+Drude oscillator energy has been calculated using the following method: multipole-gradient
+Induction Parameters:
+    Functional Form = 
+	E(ind)_ij = shell_charge - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.000000
+               A        
+H(0)         0.176050
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Induction RMS Error: 2.95049e-05
+Induction Weighted RMS Error: 1.67785e-05
+Induction Weighted Mean Signed Error: 4.93523e-06
+Induction Weighted Least-Squares Error: 4.38542e-07
+--------------------------------------------
+DHF Parameters:
+    Functional Form = 
+	E(dhf)_ij = - A*(1 + a_yml*Y_ml)*exp(-bij*rij)
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         0.129800
+               A        
+H(0)         0.279193
+Warning! Optimizer did not terminate successfully, but rather quit with the following error message:
+b'ABNORMAL_TERMINATION_IN_LNSRCH'
+------------
+Dhf RMS Error: 4.19009e-05
+Dhf Weighted RMS Error: 2.56263e-05
+Dhf Weighted Mean Signed Error: -1.79534e-05
+Dhf Weighted Least-Squares Error: 9.01337e-07
+--------------------------------------------
+Dispersion Parameters:
+    Functional Form = 
+	E(disp)_ij = sum_(n=6,8,10,12){A*fdamp_n*(Cij_n/r_ij^n)}
+               C6              C8             C10             C12       
+H            1.498389        6.488268       33.240608        0.000000
+C            4.847096       18.798288       63.256519      202.859856
+C3           4.847096       18.798288       63.256519      202.859856
+Fitted Atomtypes 
+               A        
+C3(0)        1.000000
+Constrained Atomtypes 
+               A        
+C(0)         1.000000
+               A        
+H(0)         1.000000
+------------
+Dispersion RMS Error: 3.06860e-04
+Dispersion Weighted RMS Error: 1.84030e-04
+Dispersion Weighted Mean Signed Error: 3.49803e-05
+Dispersion Weighted Least-Squares Error: 6.26258e-05
+--------------------------------------------
+Total Energy:
+------------
+Total Energy RMS Error: 7.53117e-04
+Total Energy Weighted RMS Error: 4.67293e-04
+Total Energy Weighted Mean Signed Error: 3.47576e-04
+Total Energy Weighted Least-Squares Error: 2.60456e-04
+--------------------------------------------
+#########################################################################
+
+

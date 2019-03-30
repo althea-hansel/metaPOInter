@@ -1,0 +1,82 @@
+{
+    "H": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            0.6850750504121129,
+            0.3073126296287717,
+            0.13112171361363537,
+            0.2338497703035114,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.3235561872211807,
+        "C": [
+            1.4983894687296757,
+            6.488268258942443,
+            33.240607726093096,
+            0.0
+        ],
+        "drude_charge": -0.587568966478328,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the H atom in the molecule methane, obtained from fitting the methane - methane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    },
+    "C": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            2.1052210580709576,
+            1.4269992424108886,
+            0.10510881322296907,
+            0.15094039918166155,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 1.940642180229867,
+        "C": [
+            4.847095831526338,
+            18.798287953960063,
+            63.2565191818203,
+            202.85985554318037
+        ],
+        "drude_charge": -0.774024183257736,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the C atom in the molecule methane, obtained from fitting the methane - methane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    }
+}
