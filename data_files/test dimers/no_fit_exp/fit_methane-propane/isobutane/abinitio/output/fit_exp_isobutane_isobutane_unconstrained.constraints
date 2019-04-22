@@ -1,0 +1,82 @@
+{
+    "H": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            0.4825751943904708,
+            0.22998638308465202,
+            0.0962732276243717,
+            0.15530752122296618,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.048192455771825,
+        "C": [
+            1.4983894687296757,
+            6.488268258942443,
+            33.240607726093096,
+            0.0
+        ],
+        "drude_charge": -0.587568966478328,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the H atom in the molecule isobutane, obtained from fitting the isobutane - isobutane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    },
+    "C": {
+        "params_order": [
+            "Exchange",
+            "Electrostatics",
+            "Induction",
+            "Dhf",
+            "Dispersion"
+        ],
+        "A": [
+            4.482613679768929,
+            3.181727591568896,
+            0.0,
+            0.3142714896430208,
+            1.0
+        ],
+        "aniso": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ],
+        "B": 2.360612881180605,
+        "C": [
+            4.847095831526338,
+            18.798287953960063,
+            63.2565191818203,
+            202.85985554318037
+        ],
+        "drude_charge": -0.774024183257736,
+        "springcon": 0.1,
+        "thole": 0.36,
+        "thole_type": "thole_tinker",
+        "sph_harm": [],
+        "comments": [
+            "Parameters for the C atom in the molecule isobutane, obtained from fitting the isobutane - isobutane dimer.",
+            "Z-axis not defined",
+            "X-axis not defined"
+        ]
+    }
+}

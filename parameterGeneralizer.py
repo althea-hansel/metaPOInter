@@ -7,17 +7,16 @@ This Parameter Generalizer is designed to generate general force field parameter
 
 This program requires the MASTIFF fitting package POInter stored as a local module named pointer in python path.
 
-This program was designed to be run using the Anaconda python distribution based on python 2.7
+This program was designed to be run using the Anaconda python distribution based on python 3
 
 Required input directories and files (in same working directory as this script):
 ################################################################################
 dir generalizerInput (or other specified in settings file):
-	.sapt files for all ab initio FF
 	dir input:
 		all input files required by POInter
 
 dir abInitioConstraints (or other specified in settings file):
-	.constraints files with parameters for all ab initio FF
+	.constraints files with parameters for all individual FF to be fit to
 
 settings.py: see example
 
@@ -45,7 +44,6 @@ The basic purpose of this program is to take ab initio parameters and fit them t
 Written by Althea Hansel, Harvey Mudd College '19 as part of Undergraduate Senior Thesis
 
 """
-#TODO: where are "optimized" C params in output from?
 
 # Standard packages
 import numpy as np
@@ -97,7 +95,7 @@ dimer_atomtypes = {}
 #list of aniso atomtypes
 anisoAtomtypes = []
 
-#contains all imported dimecular parameters
+#contains all imported dimer parameters
 dimers = {}
 
 #store a list of spherical harmonics for different atomtypes
@@ -144,14 +142,15 @@ drude_flags = {}
 component_lsq_error = {component : 0.0 for component in energyComponents}
 
 #flag for if isotropic dispersion should be scaled
+#TODO: implement this
 scale_iso_disp = generalizer_settings.scale_iso_disp
 
 ####################################################################################################
 # Class for holding the parameters from a single ab initio FF imported from a JSON .constraints file
 ####################################################################################################
 
-class dimecularParameters:
-	#creates object to hold parameters for an individual dimecular ab initio FF
+class dimerParameters:
+	#creates object to hold parameters for an individual dimer ab initio FF
 
 	def __init__(self, jsonInput, dimer):
 		self.jsonInput = jsonInput
@@ -396,7 +395,7 @@ def useInitialParamsFile(dimerName):
 	"""
 	if os.path.isfile(dimerName + ".params"):
 		global initialMinimizeValues
-		initialMinimizeValues = dimecularParameters(readJson(dimerName + ".params"), dimerName) #need to make this a list to interface with minimize
+		initialMinimizeValues = dimerParameters(readJson(dimerName + ".params"), dimerName) #need to make this a list to interface with minimize
 
 def minimizeDictionaryToList():
 	"""convert dictionary of imported initial values to list
@@ -440,7 +439,7 @@ def minimizeDictionaryToList():
 # fuctions to use when given library of ab initio FF
 ######################################################
 
-def importdimecularParameters():
+def importdimerParameters():
 	"""import all ab initio parameters
 
 	Parameters
@@ -454,8 +453,8 @@ def importdimecularParameters():
 	"""
 	importParameters()
 	for dim in list(inputJsons.keys()):
-		print(("Importing dimecular parameters: " + dim))
-		dimers[dim] = dimecularParameters(inputJsons[dim], dim)
+		print(("Importing dimer parameters: " + dim))
+		dimers[dim] = dimerParameters(inputJsons[dim], dim)
 		dimAtomtypes = dimers[dim].atomtypesList
 		print((dim + " parameters successfully imported!"))
 
@@ -827,9 +826,6 @@ def make_bounds_list(parameterList, include_B = True):
 	bounds_list: list of bound tuples
 
 	"""
-	i = 0 #keep track of position in bounds_list
-	#TODO: remove i
-
 	bounds_list = []
 
 	global fitting_component
@@ -838,20 +834,16 @@ def make_bounds_list(parameterList, include_B = True):
 		#A params
 		if fitting_component != 4:
 			bounds_list.append((0.0,1e3))
-			i += 1
 		else:
 			bounds_list.append((0.7,1.3))
-			i += 1
 		#B param
 		if include_B:
 			bounds_list.append((1e-2,1e2))
-			i += 1
 		#aniso
 		if atomtype in anisoAtomtypes:
 			sphericalHarmonics = atomtypeSphericalHarmonics[atomtype]
 			for sh in sphericalHarmonics:
 				bounds_list.append((-1.0,1.0))
-				i += 1
 
 	return bounds_list
 
@@ -1100,7 +1092,7 @@ def calc_disp_lsq_error():
 
 	returns
 	-------
-	total_lsq_error: float, sum of all lsq_error for each individual dimecular dispersion component
+	total_lsq_error: float, sum of all lsq_error for each individual dimer dispersion component
 	"""
 	#set fitting component for dispersion
 	global fitting_component
@@ -1446,10 +1438,11 @@ def main():
 		print("Initial parameter list successfully created")
 		#TODO: get names of all dimers in library
 		#TODO: perform opt.
+		raise NotImplementedError
 
 	except IndexError:
 		print("Importing all dimer parameters from library")
-		importdimecularParameters()
+		importdimerParameters()
 		print("Calculating average parameter values")
 		getInitalAverageParameters()
 
