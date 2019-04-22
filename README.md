@@ -35,7 +35,7 @@ To run properly, POInter requires the following python packages:
 * Sympy
 * [numexpr](https://github.com/pydata/numexpr)
 * [dill](https://github.com/uqfoundation/dill) (optional, but speeds up multipole calculations)
-* [POInter] (https://git.chem.wisc.edu/schmidt/force_fields)
+* POInter (https://git.chem.wisc.edu/schmidt/force_fields)
 
 Downloads
 ---------
