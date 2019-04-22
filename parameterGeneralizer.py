@@ -1377,7 +1377,7 @@ def optimzeGeneralParameters():
 	#write output JSON file with optimized parameters
 	optimized_params["Dispersion"] = [1.0 for atomtype in allAtomtypes]
 	final_params_list = write_output_params_to_list(optimized_params)
-	map_params(final_params_list, "optimized_params")
+	map_params(final_params_list, generalizer_settings.output_name.replace(".constraints", ""))
 
 	#calc dispersion energy and total energy
 	for dim in list(dimers.keys()):
@@ -1422,7 +1422,7 @@ def optimzeGeneralParameters():
 			f.write(str(component_lsq_error[component]) + '\n')
 
 	print("===========================================================================")
-	print(" Optimized parameters successfully written to optimized_params.constraints ")
+	print(" Optimized parameters successfully written to " + generalizer_settings.output_name)
 	print("===========================================================================")
 
 	return res

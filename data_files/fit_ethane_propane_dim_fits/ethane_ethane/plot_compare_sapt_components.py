@@ -195,10 +195,11 @@ for i, (component_prefix,component_suffix) in enumerate(zip(component_prefixes,c
             label_text = component_prefix.rstrip('_') + ' ' +\
                     component_suffix.lstrip('_').replace('.dat','')
             labels.append(patches.Patch(color=color, label=label_text))
-            #ax.legend(handles=labels, 
-            #    fontsize=22,
-            #    bbox_to_anchor=(0.93,0.79),
-            #    bbox_transform=ax.figure.transFigure)
+            print(labels)
+            ax.legend(handles=labels, 
+                fontsize=22,
+                bbox_to_anchor=(1.0,0.79),
+                bbox_transform=ax.figure.transFigure)
 
             m_values.append('')
             b_values.append('')
