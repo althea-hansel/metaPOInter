@@ -9,7 +9,7 @@ Introduction
 The MASTIFF parameter generalizer is an open-source python script for optimizing general force field parameters for the MASTIFF intermolecular force field. 
 It has primarily been designed to optimize parameters by minimizing least-squared-error summed across a library of input DFT-SAPT dimer calculations.
 
-The parameter generalizer can be called directly from the command line, or can be executed from within a Python script.
+The parameter generalizer can be called directly from the command line.
 
 
 Getting Started
@@ -35,7 +35,7 @@ To run properly, POInter requires the following python packages:
 * Sympy
 * [numexpr](https://github.com/pydata/numexpr)
 * [dill](https://github.com/uqfoundation/dill) (optional, but speeds up multipole calculations)
-* POInter (https://git.chem.wisc.edu/schmidt/force_fields)
+* [POInter] (https://git.chem.wisc.edu/schmidt/force_fields)
 
 Downloads
 ---------
