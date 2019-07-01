@@ -97,6 +97,7 @@ component_suffixes = args.suffixes
 ## #palette = sns.color_palette()
 sns.set(context='talk',font_scale=1.1)
 palette = sns.color_palette("Set2")
+palette = palette[2:3] + palette[1:2] + palette[0:]
 #sns.set_style('darkgrid',
 sns.set_style("ticks", 
                   {
@@ -312,7 +313,7 @@ for count in subplots:
 
         # Add line of best fit legends to each plot
         props = dict(facecolor=sns.axes_style()['axes.facecolor'], lw=0, alpha=1)
-        ax.text(0.98, 0.10-0.08*i, textstr, transform=ax.transAxes, 
+        ax.text(0.98, 0.12-0.09*i, textstr, transform=ax.transAxes, 
                 fontsize=15,
                 color = palette[i],
                 verticalalignment='bottom', horizontalalignment='right',bbox=props)

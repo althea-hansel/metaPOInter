@@ -145,6 +145,12 @@ component_lsq_error = {component : 0.0 for component in energyComponents}
 #TODO: implement this
 scale_iso_disp = generalizer_settings.scale_iso_disp
 
+#hold thole values, spring constants, and thole type for different atomtypes
+thole_dict = {}
+spring_constant_dict = {}
+thole_type_dict = {}
+
+
 ####################################################################################################
 # Class for holding the parameters from a single ab initio FF imported from a JSON .constraints file
 ####################################################################################################
@@ -159,6 +165,7 @@ class dimerParameters:
 		self.atomtypes = {}
 		self.atomtypesList = []
 		self.populateAtomtypes()
+		self.getTholeParams()
 
 	def __repr__(self):
 		return str(self.atomtypes)
@@ -203,6 +210,33 @@ class dimerParameters:
 			if self.anisoFlag and atomtype not in anisoAtomtypes:
 				anisoAtomtypes.append(str(atomtype))
 
+	def getTholeParams(self):
+		"""Places Thole parameters in global dictionary and performs assertion check that thole params are the same between different input dimers
+
+		Parameters
+		----------
+		none
+
+		Returns 
+		-------
+		none
+
+		"""
+		global thole_dict
+		global spring_constant_dict
+		global thole_type_dict
+
+		for atomtype in allAtomtypes:
+			atomtypeInstance = self.atomtypes[atomtype]
+			if atomtype not in thole_dict:
+				thole_dict[atomtype] = atomtypeInstance.thole
+				spring_constant_dict[atomtype] = atomtypeInstance.spring_constant
+				thole_type_dict[atomtype] = atomtypeInstance.thole_type
+			else:
+				assert thole_dict[atomtype] == atomtypeInstance.thole, "Input dimers have different Thole parameters. Please change input dimer constraints so that all Thole parameters are the same."
+				assert spring_constant_dict[atomtype] == atomtypeInstance.spring_constant, "Input dimers have different spring constants. Please change input dimer constraints so that all spring constants are the same."
+				assert thole_type_dict[atomtype] == atomtypeInstance.thole_type, "Input dimers have different Thole types. Please change input dimer constraints so that all Thole types are the same."
+
 	class Atomtype:
 		#creates object to store parameters for an atomtype within a dimer
 		def __init__(self, inputDict, anisoFlag = False):
@@ -211,6 +245,9 @@ class dimerParameters:
 			self.parameters["B"] = inputDict['B'] #since only one B value for each atomtype
 			self.parameters["C"] = self.Parameters(inputDict['C'], 'C')
 			self.drude_charge = inputDict['drude_charge']
+			self.thole = inputDict['thole']
+			self.spring_constant = inputDict['springcon']
+			self.thole_type = inputDict['thole_type']
 			self.anisoFlag = anisoFlag
 			self.sphericalHarmonics = []
 			if anisoFlag:
@@ -218,6 +255,8 @@ class dimerParameters:
 				self.sphericalHarmonics = inputDict["sph_harm"]
 			else:
 				self.parameters["aniso"] = {}
+
+
 
 		def __repr__(self):
 			return str(self.parameters)
@@ -489,7 +528,7 @@ def averageAvalues():
 						allAvalsRaw[atomtype] = componentsDict
 					except KeyError:
 						pass
-	for atomtype in allAvalsRaw: #calculate averages from list for each atomtyp for each energy type
+	for atomtype in allAvalsRaw: #calculate averages from list for each atomtype for each energy type
 		componentAvgs = {}
 		for component in energyComponents:
 			componentAvgs[component] = sum(allAvalsRaw[atomtype][component])/len(allAvalsRaw[atomtype][component])
@@ -765,6 +804,11 @@ def map_params(inputList, fileName):
 		#set drude charge
 		global atomtype_drude_charges
 		atomtypeParams["drude_charge"] = atomtype_drude_charges[atomtype]
+		#set thole param, spring constant, and thole type
+		atomtypeParams['thole'] = thole_dict[atomtype]
+		atomtypeParams['springcon'] = spring_constant_dict[atomtype]
+		atomtypeParams['thole_type'] = thole_type_dict[atomtype]
+
 		output[atomtype] = atomtypeParams
 
 	#write .constraints file with parameters from list
